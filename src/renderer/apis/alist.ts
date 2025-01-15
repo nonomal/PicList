@@ -1,6 +1,8 @@
 import axios from 'axios'
 import path from 'path'
 
+import { deleteFailedLog, deleteLog } from '#/utils/deleteLog'
+
 interface IConfigMap {
   fileName: string
   config: {
@@ -12,11 +14,14 @@ interface IConfigMap {
 }
 
 export default class AlistApi {
-  static async delete (configMap: IConfigMap): Promise<boolean> {
+  static async delete(configMap: IConfigMap): Promise<boolean> {
     const { fileName, config } = configMap
     try {
       const { version, url, uploadPath, token } = config
-      if (String(version) === '2') return true
+      if (String(version) === '2') {
+        deleteLog(fileName, 'Alist', false, 'Alist version 2 is not supported, deletion is skipped')
+        return true
+      }
       const result = await axios.request({
         method: 'post',
         url: `${url}/api/fs/remove`,
@@ -29,9 +34,14 @@ export default class AlistApi {
           names: [path.basename(fileName)]
         }
       })
-      return result.data.code === 200
-    } catch (error) {
-      console.error(error)
+      if (result.data.code === 200) {
+        deleteLog(fileName, 'Alist')
+        return true
+      }
+      deleteLog(fileName, 'Alist', false)
+      return false
+    } catch (error: any) {
+      deleteFailedLog(fileName, 'Alist', error)
       return false
     }
   }

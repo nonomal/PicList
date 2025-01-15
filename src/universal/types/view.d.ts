@@ -1,6 +1,5 @@
 interface ISettingForm {
-  updateHelper: boolean
-  showPicBedList: string[]
+  showUpdateTip: boolean
   autoStart: boolean
   rename: boolean
   autoRename: boolean
@@ -10,10 +9,8 @@ interface ISettingForm {
   autoCloseMiniWindow: boolean
   autoCloseMainWindow: boolean
   logLevel: string[]
-  autoCopyUrl: boolean
-  checkBetaUpdate: boolean
+  autoCopy: boolean
   useBuiltinClipboard: boolean
-  language: 'zh-CN' | 'zh-TW' | 'en'
   logFileSizeLimit: number
   deleteCloudFile: boolean
   isCustomMiniIcon: boolean
@@ -24,19 +21,25 @@ interface ISettingForm {
   encodeOutputURL: boolean
   isAutoListenClipboard: boolean
   useShortUrl: boolean
-  c1nToken: string
   shortUrlServer: string
+  c1nToken: string
   yourlsDomain: string
   yourlsSignature: string
   cfWorkerHost: string
+  sinkDomain: string
+  sinkToken: string
   deleteLocalFile: boolean
   serverKey: string
   aesPassword: string
-  manualPageOpen: 'window' | 'browser'
   enableWebServer: boolean
   webServerHost: string
   webServerPort: number
   webServerPath: string
+  registry: string
+  proxy: string
+  mainWindowWidth: number
+  mainWindowHeight: number
+  enableSecondUploader: boolean
 }
 
 interface IShortKeyMap {

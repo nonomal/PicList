@@ -1,14 +1,16 @@
-import { isReactive, isRef, toRaw, unref } from 'vue'
 import { ipcRenderer } from 'electron'
-import { OPEN_URL } from '~/universal/events/constants'
+import { isReactive, isRef, toRaw, unref } from 'vue'
 
-const isDevelopment = process.env.NODE_ENV !== 'production'
+import { RPC_ACTIONS, RPC_ACTIONS_INVOKE } from '#/events/constants'
+import { IRPCActionType } from '#/types/enum'
+
 export const handleTalkingDataEvent = (data: ITalkingDataOptions) => {
-  const { EventId, Label = '', MapKv = {} } = data
-  MapKv.from = window.location.href
-  window.TDAPP.onEvent(EventId, Label, MapKv)
-  if (isDevelopment) {
-    console.log('talkingData', data)
+  try {
+    const { EventId, Label = '', MapKv = {} } = data
+    MapKv.from = window.location.href
+    window.TDAPP.onEvent(EventId, Label, MapKv)
+  } catch (e) {
+    console.error(e)
   }
 }
 
@@ -29,11 +31,19 @@ export const getRawData = (args: any): any => {
   return args
 }
 
-function sendToMain (channel: string, ...args: any[]) {
+export function sendToMain(channel: string, ...args: any[]) {
   const data = getRawData(args)
   ipcRenderer.send(channel, ...data)
 }
 
-export const openURL = (url: string) => {
-  sendToMain(OPEN_URL, url)
+export function sendRPC(action: IRPCActionType, ...args: any[]): void {
+  ipcRenderer.send(RPC_ACTIONS, action, getRawData(args))
+}
+
+export function sendRpcSync(action: IRPCActionType, ...args: any[]) {
+  return ipcRenderer.sendSync(RPC_ACTIONS, action, getRawData(args))
+}
+
+export async function triggerRPC<T>(action: IRPCActionType, ...args: any[]): Promise<T | undefined> {
+  return await ipcRenderer.invoke(RPC_ACTIONS_INVOKE, action, getRawData(args))
 }

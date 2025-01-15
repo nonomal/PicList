@@ -1,7 +1,11 @@
 import { v4 as uuid } from 'uuid'
-import { trimValues } from '#/utils/common'
+
 import picgo from '@core/picgo'
-import { configPaths } from '~/universal/utils/configPaths'
+
+import { setTrayToolTip } from '~/utils/common'
+
+import { trimValues } from '#/utils/common'
+import { configPaths } from '#/utils/configPaths'
 
 export const handleConfigWithFunction = (config: IPicGoPluginOriginConfig[]): IPicGoPluginConfig[] => {
   for (const i in config) {
@@ -9,6 +13,7 @@ export const handleConfigWithFunction = (config: IPicGoPluginOriginConfig[]): IP
       config[i].default = config[i].default()
     }
     if (typeof config[i].choices === 'function') {
+      // eslint-disable-next-line @typescript-eslint/ban-types
       config[i].choices = (config[i].choices as Function)()
     }
   }
@@ -16,13 +21,17 @@ export const handleConfigWithFunction = (config: IPicGoPluginOriginConfig[]): IP
 }
 
 export const completeUploaderMetaConfig = (originData: IStringKeyMap): IUploaderConfigListItem => {
-  return Object.assign({
-    _configName: 'Default'
-  }, trimValues(originData), {
-    _id: uuid(),
-    _createdAt: Date.now(),
-    _updatedAt: Date.now()
-  })
+  return Object.assign(
+    {
+      _configName: 'Default'
+    },
+    trimValues(originData),
+    {
+      _id: uuid(),
+      _createdAt: Date.now(),
+      _updatedAt: Date.now()
+    }
+  )
 }
 
 /**
@@ -47,6 +56,25 @@ export const getPicBedConfig = (type: string) => {
   }
 }
 
+export const changeSecondUploader = (type: string, config?: IStringKeyMap, id?: string) => {
+  if (!type) {
+    return
+  }
+  if (id) {
+    picgo.saveConfig({
+      [configPaths.picBed.secondUploaderId]: id
+    })
+  }
+  if (config) {
+    picgo.saveConfig({
+      [configPaths.picBed.secondUploaderConfig]: config
+    })
+  }
+  picgo.saveConfig({
+    [configPaths.picBed.secondUploader]: type
+  })
+}
+
 export const changeCurrentUploader = (type: string, config?: IStringKeyMap, id?: string) => {
   if (!type) {
     return
@@ -65,6 +93,7 @@ export const changeCurrentUploader = (type: string, config?: IStringKeyMap, id?:
     [configPaths.picBed.current]: type,
     [configPaths.picBed.uploader]: type
   })
+  setTrayToolTip(`${type} ${config?._configName || ''}`)
 }
 
 export const selectUploaderConfig = (type: string, id: string) => {
@@ -125,7 +154,9 @@ export const deleteUploaderConfig = (type: string, id: string): IUploaderConfigI
 /**
  * upgrade old uploader config to new format
  */
-export const upgradeUploaderConfig = (type: string): {
+export const upgradeUploaderConfig = (
+  type: string
+): {
   configList: IStringKeyMap[]
   defaultId: string
 } => {

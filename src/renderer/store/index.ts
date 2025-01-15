@@ -1,6 +1,6 @@
-import { reactive, InjectionKey, readonly, App, UnwrapRef, ref } from 'vue'
+import { reactive, InjectionKey, readonly, App, UnwrapRef } from 'vue'
 import { saveConfig } from '@/utils/dataSender'
-import { configPaths } from '~/universal/utils/configPaths'
+import { configPaths } from '#/utils/configPaths'
 
 export interface IState {
   defaultPicBed: string
@@ -9,7 +9,6 @@ export interface IState {
 export interface IStore {
   state: UnwrapRef<IState>
   setDefaultPicBed: (type: string) => void
-  updateForceUpdateTime: () => void
 }
 
 export const storeKey: InjectionKey<IStore> = Symbol('store')
@@ -18,8 +17,6 @@ export const storeKey: InjectionKey<IStore> = Symbol('store')
 const state: IState = reactive({
   defaultPicBed: 'smms'
 })
-
-const forceUpdateTime = ref<number>(Date.now())
 
 // methods
 const setDefaultPicBed = (type: string) => {
@@ -30,17 +27,11 @@ const setDefaultPicBed = (type: string) => {
   state.defaultPicBed = type
 }
 
-const updateForceUpdateTime = () => {
-  forceUpdateTime.value = Date.now()
-}
-
 export const store = {
-  install (app: App) {
+  install(app: App) {
     app.provide(storeKey, {
       state: readonly(state),
-      setDefaultPicBed,
-      updateForceUpdateTime
+      setDefaultPicBed
     })
-    app.provide('forceUpdateTime', forceUpdateTime)
   }
 }

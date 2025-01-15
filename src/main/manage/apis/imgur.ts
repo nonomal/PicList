@@ -1,14 +1,12 @@
-// External dependencies
-import fs from 'fs-extra'
+import { ipcMain, IpcMainEvent } from 'electron'
 import FormData from 'form-data'
+import fs from 'fs-extra'
 import got from 'got'
 import path from 'path'
 
-// Electron modules
-import { ipcMain, IpcMainEvent } from 'electron'
+import windowManager from 'apis/app/window/windowManager'
 
-// Custom utilities and modules
-import { IWindowList } from '#/types/enum'
+import UpDownTaskQueue from '~/manage/datastore/upDownTaskQueue'
 import {
   ConcurrencyPromisePool,
   formatError,
@@ -17,11 +15,11 @@ import {
   getAgent,
   gotUpload,
   NewDownloader
-} from '../utils/common'
-import ManageLogger from '../utils/logger'
-import windowManager from 'apis/app/window/windowManager'
-import { formatHttpProxy, isImage } from '~/renderer/manage/utils/common'
-import UpDownTaskQueue, { commonTaskStatus } from '../datastore/upDownTaskQueue'
+} from '~/manage/utils/common'
+import ManageLogger from '~/manage/utils/logger'
+
+import { commonTaskStatus, IWindowList } from '#/types/enum'
+import { formatHttpProxy, isImage } from '#/utils/common'
 
 class ImgurApi {
   userName: string
@@ -33,7 +31,7 @@ class ImgurApi {
   idHeaders: any
   baseUrl = 'https://api.imgur.com/3'
 
-  constructor (userName: string, accessToken: string, proxy: any, logger: ManageLogger) {
+  constructor(userName: string, accessToken: string, proxy: any, logger: ManageLogger) {
     this.userName = userName
     this.accessToken = accessToken.startsWith('Bearer ') ? accessToken : `Bearer ${accessToken}`
     this.proxy = proxy
@@ -44,7 +42,7 @@ class ImgurApi {
     }
   }
 
-  formatFile (item: any) {
+  formatFile(item: any) {
     const fileName = path.basename(item.link)
     const isImg = isImage(fileName)
     return {
@@ -64,17 +62,17 @@ class ImgurApi {
   }
 
   /**
-  * get repo list
-  */
-  async getBucketList (): Promise<any> {
+   * get repo list
+   */
+  async getBucketList(): Promise<any> {
     let initPage = 0
     let res
     const result = [] as any[]
     do {
-      res = await got(
+      res = (await got(
         `${this.baseUrl}/account/${this.userName}/albums/${initPage}`,
         getOptions('GET', this.tokenHeaders, undefined, 'json', undefined, undefined, this.proxy)
-      ) as any
+      )) as any
       if (!(res.statusCode === 200 && res.body.success)) {
         return []
       }
@@ -95,11 +93,14 @@ class ImgurApi {
     return finalResult
   }
 
-  async getBucketListBackstage (configMap: IStringKeyMap): Promise<any> {
+  async getBucketListBackstage(configMap: IStringKeyMap): Promise<any> {
     const window = windowManager.get(IWindowList.SETTING_WINDOW)!
-    const { bucketConfig: { Location: albumHash }, cancelToken } = configMap
+    const {
+      bucketConfig: { Location: albumHash },
+      cancelToken
+    } = configMap
     const cancelTask = [false]
-    ipcMain.on('cancelLoadingFileList', (_evt: IpcMainEvent, token: string) => {
+    ipcMain.on('cancelLoadingFileList', (_: IpcMainEvent, token: string) => {
       if (token === cancelToken) {
         cancelTask[0] = true
         ipcMain.removeAllListeners('cancelLoadingFileList')
@@ -112,10 +113,10 @@ class ImgurApi {
       finished: false
     }
     if (albumHash !== 'unclassified') {
-      res = await got(
+      res = (await got(
         `${this.baseUrl}/account/${this.userName}/album/${albumHash}`,
         getOptions('GET', this.tokenHeaders, undefined, 'json', undefined, undefined, this.proxy)
-      ) as any
+      )) as any
       if (res.statusCode === 200 && res.body.success) {
         res.body.data.images.forEach((item: any) => {
           result.fullList.push(this.formatFile(item))
@@ -129,10 +130,10 @@ class ImgurApi {
     } else {
       let initPage = 0
       do {
-        res = await got(
+        res = (await got(
           `${this.baseUrl}/account/${this.userName}/images/${initPage}`,
           getOptions('GET', this.tokenHeaders, undefined, 'json', undefined, undefined, this.proxy)
-        ) as any
+        )) as any
         if (res.statusCode === 200 && res.body.success) {
           res.body.data.forEach((item: any) => {
             result.fullList.push(this.formatFile(item))
@@ -152,12 +153,12 @@ class ImgurApi {
     ipcMain.removeAllListeners('cancelLoadingFileList')
   }
 
-  async deleteBucketFile (configMap: IStringKeyMap): Promise<boolean> {
+  async deleteBucketFile(configMap: IStringKeyMap): Promise<boolean> {
     const { DeleteHash: deleteHash } = configMap
-    const res = await got(
+    const res = (await got(
       `${this.baseUrl}/account/${this.userName}/image/${deleteHash}`,
       getOptions('DELETE', this.tokenHeaders, undefined, 'json', undefined, undefined, this.proxy)
-    ) as any
+    )) as any
     return res.statusCode === 200 && res.body.success
   }
 
@@ -165,7 +166,7 @@ class ImgurApi {
    * 上传文件
    * @param configMap
    */
-  async uploadBucketFile (configMap: IStringKeyMap): Promise<boolean> {
+  async uploadBucketFile(configMap: IStringKeyMap): Promise<boolean> {
     const { fileArray } = configMap
     const instance = UpDownTaskQueue.getInstance()
     fileArray.forEach((item: any) => {
@@ -225,7 +226,7 @@ class ImgurApi {
    * 下载文件
    * @param configMap
    */
-  async downloadBucketFile (configMap: IStringKeyMap): Promise<boolean> {
+  async downloadBucketFile(configMap: IStringKeyMap): Promise<boolean> {
     const { downloadPath, fileArray, maxDownloadFileCount } = configMap
     const instance = UpDownTaskQueue.getInstance()
     const promises = [] as any
@@ -243,26 +244,21 @@ class ImgurApi {
         sourceFileName: fileName,
         targetFilePath: savedFilePath
       })
-      promises.push(() => new Promise((resolve, reject) => {
-        NewDownloader(
-          instance,
-          url,
-          id,
-          savedFilePath,
-          this.logger,
-          this.proxyStr
-        )
-          .then((res: boolean) => {
-            if (res) {
-              resolve(res)
-            } else {
-              reject(res)
-            }
+      promises.push(
+        () =>
+          new Promise((resolve, reject) => {
+            NewDownloader(instance, url, id, savedFilePath, this.logger, this.proxyStr).then((res: boolean) => {
+              if (res) {
+                resolve(res)
+              } else {
+                reject(res)
+              }
+            })
           })
-      }))
+      )
     }
     const pool = new ConcurrencyPromisePool(maxDownloadFileCount)
-    pool.all(promises).catch((error) => {
+    pool.all(promises).catch(error => {
       this.logger.error(formatError(error, { class: 'ImgurApi', method: 'downloadBucketFile' }))
     })
     return true

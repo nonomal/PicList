@@ -34,7 +34,7 @@ PicList的内核使用的是原版PicGo-Core基础上修改的[PicList-core](htt
 ## 特色功能
 
 - 保留了PicGo的所有功能，兼容绝大部分已有的PicGo插件，包括和Typora、Obsidian等软件的搭配
-- 新增了多个内置图床，如WebDav、兰空图床、本地图床、SFTP和Telegra.ph等，原内置imgur图床额外支持登录账号上传
+- 新增了多个内置图床，如WebDav、兰空图床、本地图床、SFTP等，原内置imgur图床额外支持登录账号上传
 - 相册中可同步删除云端图片，支持所有内置图床和多个插件
 - 相册新增了高级搜索和排序，批量修改URL等功能
 - 内置水印添加、图片压缩、图片缩放、图片旋转和图片格式转换等功能，同时支持高级重命名
@@ -58,9 +58,9 @@ PicList的内核使用的是原版PicGo-Core基础上修改的[PicList-core](htt
 
 #### **1.6.0版本及以上**
 
-**Typora 1.6.0-dev以及以上版本现在已经原生支持PicList了** 
+**Typora 1.6.0-dev以及以上版本现在已经原生支持PicList了, 但你需要将Typora的语言设置为中文**
 
-目前Typora中需要同时设置上传服务PicList和PicGo（app）的路径为PicList的安装路径，已经在最新的Dev版本中修复。
+1.8.0以下版本的Typora中需要同时设置上传服务PicList和PicGo（app）的路径为PicList的安装路径。
 
 [下载地址](https://typora.io/releases/all)
 
@@ -73,14 +73,6 @@ Windows:
 ![image](https://user-images.githubusercontent.com/96409857/226522101-b3531b7b-534c-4149-b527-8738d4ebb041.png)
 
 或者，您也可以使用 `npm install piclist`命令安装PicList-core，然后上传服务设置为 `PicGo-Core(command line)`。
-
-MacOS:
-
-进入Typora设置界面，选择图像，将上传服务设置为 `Custom Command`，然后在 `Command`中填写 `/Applications/PicList.app/Contents/MacOS/PicList upload`，如下图所示：
-
-![image](https://user-images.githubusercontent.com/96409857/226645570-4c6e06a5-5bd9-40c3-a21d-8446c66325e3.png)
-
-验证上传选项可能会出现问题，可以忽略，直接使用是正常的。
 
 ### 如何在Obsidian中使用
 
@@ -135,6 +127,7 @@ docker-compose up -d
 
 |      平台      | 相册云删除 | 云存储管理 |
 | :------------: | :--------: | :--------: |
+|   内置AList    |     ✔️      |     ✔️      |
 |     SM.MS      |     ✔️      |     ✔️      |
 |     Github     |     ✔️      |     ✔️      |
 |     Imgur      |     ✔️      |     ✔️      |
@@ -148,8 +141,8 @@ docker-compose up -d
 |    内置SFTP    |     ✔️      |     ✔️      |
 |     多吉云     |     ✔️      |     ✔️      |
 | PicList(套娃)  |     ✔️      |     ✔️      |
-|   Telegra.ph   |     ✔️      |     x      |
 |    兰空图床    |     ✔️      |     ✔️      |
+|   自定义图床   |     x      |     x      |
 
 |                                            插件                                            | 相册云删除 |
 | :----------------------------------------------------------------------------------------: | :--------: |
@@ -161,6 +154,15 @@ docker-compose up -d
 ## 下载安装
 
 [https://github.com/Kuingsmile/PicList/releases/latest](https://github.com/Kuingsmile/PicList/releases/latest)
+
+### Scoop
+
+感谢[scoop-lemon](https://github.com/hoilc/scoop-lemon)，你可以使用Scoop来安装PicList，只需要执行以下命令即可：
+
+```bash
+scoop bucket add lemon https://github.com/hoilc/scoop-lemon
+scoop install lemon/piclist
+```
 
 ### Homebrew
 
@@ -175,6 +177,12 @@ brew install piclist --cask
 ```bash
 brew uninstall piclist
 ```
+
+### Mac特殊说明
+
+如果macOS系统安装PicList后显示“文件已损坏”或者安装后打开无响应，请升级到PicList V1.4.1或以上版本。
+
+V1.4.1之后，所有mac安装包都已经使用我的开发者证书签名，不会被macOS系统识别为“恶意软件”，不会出现“文件已损坏”提示。
 
 ## 应用截图
 

@@ -1,4 +1,3 @@
-// AWS S3 相关
 import {
   S3Client,
   ListBucketsCommand,
@@ -12,52 +11,30 @@ import {
   DeleteObjectCommand,
   DeleteObjectsCommand,
   PutObjectCommand,
-  S3ClientConfig
+  S3ClientConfig,
+  CreateBucketCommand,
+  PutPublicAccessBlockCommand,
+  PutBucketAclCommand
 } from '@aws-sdk/client-s3'
-
-// AWS S3 上传和进度
 import { Upload, Progress } from '@aws-sdk/lib-storage'
-
-// AWS S3 请求签名
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-
-// HTTP 和 HTTPS 模块
-import https from 'https'
-import http, { AgentOptions } from 'http'
 import { NodeHttpHandler } from '@smithy/node-http-handler'
-
-// 日志记录器
-import { ManageLogger } from '../utils/logger'
-
-// 端点地址格式化函数、错误格式化函数、获取请求代理、获取文件 MIME 类型、新的下载器、并发异步任务池
-import { formatEndpoint, formatError, getAgent, getFileMimeType, NewDownloader, ConcurrencyPromisePool } from '../utils/common'
-
-// 是否为图片的判断函数、HTTP 代理格式化函数
-import { isImage, formatHttpProxy } from '@/manage/utils/common'
-
-// 窗口管理器
-import windowManager from 'apis/app/window/windowManager'
-
-// 枚举类型声明
-import { IWindowList } from '#/types/enum'
-
-// Electron 相关
 import { ipcMain, IpcMainEvent } from 'electron'
-
-// 上传下载任务队列
-import UpDownTaskQueue, { uploadTaskSpecialStatus, commonTaskStatus } from '../datastore/upDownTaskQueue'
-
-// 文件系统库
 import fs from 'fs-extra'
-
-// 路径处理库
+import http, { AgentOptions } from 'http'
+import https from 'https'
 import path from 'path'
 
-// 取消下载任务的加载文件列表、刷新下载文件传输列表
-import { cancelDownloadLoadingFileList, refreshDownloadFileTransferList } from '@/manage/utils/static'
+import windowManager from 'apis/app/window/windowManager'
 
-// dogecloudApi
-import { dogecloudApi, DogecloudToken, getTempToken } from '../utils/dogeAPI'
+import UpDownTaskQueue from '~/manage/datastore/upDownTaskQueue'
+import { formatError, getAgent, getFileMimeType, NewDownloader, ConcurrencyPromisePool } from '~/manage/utils/common'
+import { dogecloudApi, DogecloudToken, getTempToken } from '~/manage/utils/dogeAPI'
+import { ManageLogger } from '~/manage/utils/logger'
+
+import { commonTaskStatus, IWindowList, uploadTaskSpecialStatus } from '#/types/enum'
+import { isImage, formatEndpoint, formatHttpProxy } from '#/utils/common'
+import { cancelDownloadLoadingFileList, refreshDownloadFileTransferList } from '#/utils/static'
 
 class S3plistApi {
   baseOptions: S3ClientConfig
@@ -69,7 +46,7 @@ class S3plistApi {
   secretAccessKey: string
   bucketName: string
 
-  constructor (
+  constructor(
     accessKeyId: string,
     secretAccessKey: string,
     endpoint: string | undefined,
@@ -98,9 +75,9 @@ class S3plistApi {
     this.proxy = formatHttpProxy(proxy, 'string') as string | undefined
   }
 
-  async getDogeCloudToken () {
+  async getDogeCloudToken() {
     if (!this.dogeCloudSupport) return
-    const token = await getTempToken(this.accessKeyId, this.secretAccessKey) as DogecloudToken
+    const token = (await getTempToken(this.accessKeyId, this.secretAccessKey)) as DogecloudToken
     if (Object.keys(token).length === 0) {
       throw new Error('manage.setting.dogeCloudTokenError')
     }
@@ -111,7 +88,7 @@ class S3plistApi {
     }
   }
 
-  setAgent (proxy: string | undefined, sslEnabled: boolean) : NodeHttpHandler {
+  setAgent(proxy: string | undefined, sslEnabled: boolean): NodeHttpHandler {
     const agent = getAgent(proxy, sslEnabled)
     const commonOptions: AgentOptions = {
       keepAlive: true,
@@ -121,29 +98,29 @@ class S3plistApi {
     const extraOptions = sslEnabled ? { rejectUnauthorized: false } : {}
     return sslEnabled
       ? new NodeHttpHandler({
-        httpsAgent: agent.https
-          ? agent.https
-          : new https.Agent({
-            ...commonOptions,
-            ...extraOptions
-          })
-      })
+          httpsAgent: agent.https
+            ? agent.https
+            : new https.Agent({
+                ...commonOptions,
+                ...extraOptions
+              })
+        })
       : new NodeHttpHandler({
-        httpAgent: agent.http
-          ? agent.http
-          : new http.Agent({
-            ...commonOptions,
-            ...extraOptions
-          })
-      })
+          httpAgent: agent.http
+            ? agent.http
+            : new http.Agent({
+                ...commonOptions,
+                ...extraOptions
+              })
+        })
   }
 
-  logParam = (error:any, method: string) =>
-    this.logger.error(formatError(error, { class: 'S3plistApi', method }))
+  logParam = (error: any, method: string) => this.logger.error(formatError(error, { class: 'S3plistApi', method }))
 
-  formatFolder (item: CommonPrefix, slicedPrefix: string): any {
+  formatFolder(item: CommonPrefix, slicedPrefix: string, urlPrefix: string): any {
     return {
       Key: item.Prefix,
+      url: `${urlPrefix}/${item.Prefix}`,
       fileSize: 0,
       formatedTime: '',
       fileName: item.Prefix?.replace(slicedPrefix, '').replace('/', ''),
@@ -155,7 +132,7 @@ class S3plistApi {
     }
   }
 
-  formatFile (item: _Object, slicedPrefix: string, urlPrefix: string): any {
+  formatFile(item: _Object, slicedPrefix: string, urlPrefix: string): any {
     const fileName = item.Key?.replace(slicedPrefix, '')
     return {
       ...item,
@@ -171,10 +148,93 @@ class S3plistApi {
     }
   }
 
+  async putPublicAccess(bucketName: string, client: S3Client) {
+    const input = {
+      Bucket: bucketName,
+      PublicAccessBlockConfiguration: {
+        BlockPublicAcls: false,
+        IgnorePublicAcls: false,
+        BlockPublicPolicy: false,
+        RestrictPublicBuckets: false
+      }
+    }
+    const command = new PutPublicAccessBlockCommand(input)
+    const data = await client.send(command)
+    if (data.$metadata.httpStatusCode !== 200) {
+      this.logParam(data, 'putPublicAccess')
+      throw new Error('manage.setting.putPublicAccessError')
+    }
+  }
+
   /**
-     * 获取存储桶列表
-    */
-  async getBucketList (): Promise<any> {
+   * 新建存储桶
+   * @param {Object} configMap
+   * configMap = {
+   * BucketName: string,
+   * region: string,
+   * acl: string
+   * }
+   */
+  async createBucket(configMap: IStringKeyMap): Promise<boolean> {
+    const { BucketName, region, acl, endpoint } = configMap
+    try {
+      await this.getDogeCloudToken()
+      const options = Object.assign({}, this.baseOptions) as S3ClientConfig
+      options.region = String(region) || 'us-east-1'
+      const client = new S3Client(options)
+      const command = new ListBucketsCommand({})
+      const data = await client.send(command)
+      if (data.$metadata.httpStatusCode === 200) {
+        const bucketList = data.Buckets?.map(item => item.Name)
+        if (bucketList?.includes(BucketName)) {
+          return true
+        }
+      }
+      if (endpoint === '' || endpoint.includes('amazonaws')) {
+        const createCommand = new CreateBucketCommand({
+          Bucket: BucketName,
+          ObjectOwnership: 'BucketOwnerPreferred'
+        })
+        const createData = await client.send(createCommand)
+        if (createData.$metadata.httpStatusCode === 200) {
+          if (acl !== 'private') {
+            await this.putPublicAccess(BucketName, client)
+            const putACLCommand = new PutBucketAclCommand({
+              Bucket: BucketName,
+              ACL: acl
+            })
+            const putACLData = await client.send(putACLCommand)
+            if (putACLData.$metadata.httpStatusCode !== 200) {
+              this.logParam(putACLData, 'createBucket')
+              return false
+            }
+          }
+          return true
+        } else {
+          this.logParam(createData, 'createBucket')
+        }
+      } else {
+        const createCommand = new CreateBucketCommand({
+          Bucket: BucketName,
+          ACL: acl
+        })
+        const createData = await client.send(createCommand)
+        if (createData.$metadata.httpStatusCode === 200) {
+          return true
+        } else {
+          this.logParam(createData, 'createBucket')
+        }
+      }
+    } catch (error) {
+      this.logParam(error, 'createBucket')
+    }
+    return false
+  }
+
+  /**
+   * 获取存储桶列表
+   */
+  async getBucketList(): Promise<any> {
     if (this.dogeCloudSupport) {
       try {
         const res = await dogecloudApi('/oss/bucket/list.json', {}, false, this.accessKeyId, this.secretAccessKey)
@@ -197,7 +257,7 @@ class S3plistApi {
     }
     const options = Object.assign({}, this.baseOptions) as S3ClientConfig
     const result: IStringKeyMap[] = []
-    const endpoint = options.endpoint as string || ''
+    const endpoint = (options.endpoint as string) || ''
     options.region = endpoint.includes('cloudflarestorage') ? 'auto' : 'us-east-1'
     try {
       const client = new S3Client(options)
@@ -210,23 +270,28 @@ class S3plistApi {
 
       if (data.Buckets) {
         if (endpoint.includes('cloudflarestorage')) {
-          result.push(...data.Buckets.map(bucket => ({
-            Name: bucket.Name,
-            CreationDate: bucket.CreationDate,
-            Location: 'auto'
-          })))
+          result.push(
+            ...data.Buckets.map(bucket => ({
+              Name: bucket.Name,
+              CreationDate: bucket.CreationDate,
+              Location: 'auto'
+            }))
+          )
         } else {
           for (const bucket of data.Buckets) {
             const bucketName = bucket.Name
-            const bucketConfig = await client.send(new GetBucketLocationCommand({
-              Bucket: bucketName
-            }))
+            const bucketConfig = await client.send(
+              new GetBucketLocationCommand({
+                Bucket: bucketName
+              })
+            )
             result.push({
               Name: bucketName,
               CreationDate: bucket.CreationDate,
-              Location: bucketConfig.$metadata.httpStatusCode === 200
-                ? bucketConfig.LocationConstraint?.toLowerCase() || 'us-east-1'
-                : 'us-east-1'
+              Location:
+                bucketConfig.$metadata.httpStatusCode === 200
+                  ? bucketConfig.LocationConstraint?.toLowerCase() || 'us-east-1'
+                  : 'us-east-1'
             })
             if (bucketConfig.$metadata.httpStatusCode !== 200) {
               this.logParam(bucketConfig, 'getBucketList')
@@ -240,14 +305,19 @@ class S3plistApi {
     return result
   }
 
-  async getBucketListRecursively (configMap: IStringKeyMap): Promise<any> {
+  async getBucketListRecursively(configMap: IStringKeyMap): Promise<any> {
     const window = windowManager.get(IWindowList.SETTING_WINDOW)!
-    const { bucketName: bucket, bucketConfig: { Location: region }, prefix, cancelToken } = configMap
+    const {
+      bucketName: bucket,
+      bucketConfig: { Location: region },
+      prefix,
+      cancelToken
+    } = configMap
     const slicedPrefix = prefix.slice(1)
     const urlPrefix = configMap.customUrl || `https://${bucket}.s3.amazonaws.com`
     let marker
     const cancelTask = [false]
-    ipcMain.on(cancelDownloadLoadingFileList, (_evt: IpcMainEvent, token: string) => {
+    ipcMain.on(cancelDownloadLoadingFileList, (_: IpcMainEvent, token: string) => {
       if (token === cancelToken) {
         cancelTask[0] = true
         ipcMain.removeAllListeners(cancelDownloadLoadingFileList)
@@ -272,9 +342,10 @@ class S3plistApi {
         })
         res = await client.send(command)
         if (res.$metadata.httpStatusCode === 200) {
-          res.Contents && res.Contents.forEach((item: _Object) => {
-            result.fullList.push(this.formatFile(item, slicedPrefix, urlPrefix))
-          })
+          res.Contents &&
+            res.Contents.forEach((item: _Object) => {
+              result.fullList.push(this.formatFile(item, slicedPrefix, urlPrefix))
+            })
           window.webContents.send(refreshDownloadFileTransferList, result)
         } else {
           this.logParam(res, 'getBucketListRecursively')
@@ -298,14 +369,19 @@ class S3plistApi {
     ipcMain.removeAllListeners(cancelDownloadLoadingFileList)
   }
 
-  async getBucketListBackstage (configMap: IStringKeyMap): Promise<any> {
+  async getBucketListBackstage(configMap: IStringKeyMap): Promise<any> {
     const window = windowManager.get(IWindowList.SETTING_WINDOW)!
-    const { bucketName: bucket, bucketConfig: { Location: region }, prefix, cancelToken } = configMap
+    const {
+      bucketName: bucket,
+      bucketConfig: { Location: region },
+      prefix,
+      cancelToken
+    } = configMap
     const slicedPrefix = prefix.slice(1)
     const urlPrefix = configMap.customUrl || `https://${bucket}.s3.amazonaws.com`
     let marker
     const cancelTask = [false]
-    ipcMain.on('cancelLoadingFileList', (_evt: IpcMainEvent, token: string) => {
+    ipcMain.on('cancelLoadingFileList', (_: IpcMainEvent, token: string) => {
       if (token === cancelToken) {
         cancelTask[0] = true
         ipcMain.removeAllListeners('cancelLoadingFileList')
@@ -332,12 +408,14 @@ class S3plistApi {
         })
         res = await client.send(command)
         if (res.$metadata.httpStatusCode === 200) {
-          res.CommonPrefixes && res.CommonPrefixes.forEach((item: CommonPrefix) => {
-            result.fullList.push(this.formatFolder(item, slicedPrefix))
-          })
-          res.Contents && res.Contents.forEach((item: _Object) => {
-            result.fullList.push(this.formatFile(item, slicedPrefix, urlPrefix))
-          })
+          res.CommonPrefixes &&
+            res.CommonPrefixes.forEach((item: CommonPrefix) => {
+              result.fullList.push(this.formatFolder(item, slicedPrefix, urlPrefix))
+            })
+          res.Contents &&
+            res.Contents.forEach((item: _Object) => {
+              result.fullList.push(this.formatFile(item, slicedPrefix, urlPrefix))
+            })
           window.webContents.send('refreshFileTransferList', result)
         } else {
           this.logParam(res, 'getBucketListBackstage')
@@ -361,8 +439,14 @@ class S3plistApi {
     ipcMain.removeAllListeners('cancelLoadingFileList')
   }
 
-  async getBucketFileList (configMap: IStringKeyMap): Promise<any> {
-    const { bucketName: bucket, bucketConfig: { Location: region }, prefix, marker, itemsPerPage } = configMap
+  async getBucketFileList(configMap: IStringKeyMap): Promise<any> {
+    const {
+      bucketName: bucket,
+      bucketConfig: { Location: region },
+      prefix,
+      marker,
+      itemsPerPage
+    } = configMap
     const slicedPrefix = prefix.slice(1)
     const urlPrefix = configMap.customUrl || `https://${bucket}.s3.amazonaws.com`
     const result = {
@@ -373,7 +457,10 @@ class S3plistApi {
     }
     try {
       await this.getDogeCloudToken()
-      const options = Object.assign({}, { ...this.baseOptions, region: String(region) || 'us-east-1' }) as S3ClientConfig
+      const options = Object.assign(
+        {},
+        { ...this.baseOptions, region: String(region) || 'us-east-1' }
+      ) as S3ClientConfig
       const client = new S3Client(options)
       const command = new ListObjectsV2Command({
         Bucket: bucket,
@@ -385,7 +472,7 @@ class S3plistApi {
       const data = await client.send(command)
       if (data.$metadata.httpStatusCode === 200) {
         result.fullList = [
-          ...(data.CommonPrefixes?.map(item => this.formatFolder(item, slicedPrefix)) || []),
+          ...(data.CommonPrefixes?.map(item => this.formatFolder(item, slicedPrefix, urlPrefix)) || []),
           ...(data.Contents?.map(item => this.formatFile(item, slicedPrefix, urlPrefix)) || [])
         ]
         result.isTruncated = data.IsTruncated || false
@@ -399,21 +486,24 @@ class S3plistApi {
   }
 
   /**
-     * 重命名文件
-     * @param configMap
-     * configMap = {
-     * bucketName: string,
-     * region: string,
-     * oldKey: string,
-     * newKey: string
-     * }
-    */
-  async renameBucketFile (configMap: IStringKeyMap): Promise<boolean> {
+   * 重命名文件
+   * @param configMap
+   * configMap = {
+   * bucketName: string,
+   * region: string,
+   * oldKey: string,
+   * newKey: string
+   * }
+   */
+  async renameBucketFile(configMap: IStringKeyMap): Promise<boolean> {
     const { bucketName, region, oldKey, newKey } = configMap
     let result = false
     try {
       await this.getDogeCloudToken()
-      const options = Object.assign({}, { ...this.baseOptions, region: String(region) || 'us-east-1' }) as S3ClientConfig
+      const options = Object.assign(
+        {},
+        { ...this.baseOptions, region: String(region) || 'us-east-1' }
+      ) as S3ClientConfig
       const client = new S3Client(options)
       const command = new CopyObjectCommand({
         Bucket: bucketName,
@@ -442,15 +532,15 @@ class S3plistApi {
   }
 
   /**
-  * 删除文件
-  * @param configMap
-  * configMap = {
-  * bucketName: string,
-  * region: string,
-  * key: string
-  * }
-  */
-  async deleteBucketFile (configMap: IStringKeyMap): Promise<boolean> {
+   * 删除文件
+   * @param configMap
+   * configMap = {
+   * bucketName: string,
+   * region: string,
+   * key: string
+   * }
+   */
+  async deleteBucketFile(configMap: IStringKeyMap): Promise<boolean> {
     const { bucketName, region, key } = configMap
     let result = false
     try {
@@ -475,10 +565,10 @@ class S3plistApi {
   }
 
   /**
-  * 删除文件夹
-  * @param configMap
-  */
-  async deleteBucketFolder (configMap: IStringKeyMap): Promise<boolean> {
+   * 删除文件夹
+   * @param configMap
+   */
+  async deleteBucketFolder(configMap: IStringKeyMap): Promise<boolean> {
     const { bucketName, region, key } = configMap
     let marker
     let result = false
@@ -501,7 +591,7 @@ class S3plistApi {
           Delimiter: '/',
           MaxKeys: 1000
         })
-        res = await client.send(command) as ListObjectsV2CommandOutput
+        res = (await client.send(command)) as ListObjectsV2CommandOutput
         if (res.$metadata.httpStatusCode === 200) {
           res.CommonPrefixes && allFileList.CommonPrefixes.push(...res.CommonPrefixes)
           res.Contents && allFileList.Contents.push(...res.Contents)
@@ -534,7 +624,7 @@ class S3plistApi {
           const deleteCommand = new DeleteObjectsCommand({
             Bucket: bucketName,
             Delete: {
-              Objects: deleteList.map((item) => {
+              Objects: deleteList.map(item => {
                 return {
                   Key: item.Key
                 }
@@ -557,29 +647,33 @@ class S3plistApi {
   }
 
   /**
-     * 获取预签名url
-     * @param configMap
-     * configMap = {
-     * bucketName: string,
-     * region: string,
-     * key: string,
-     * expires: number,
-     * customUrl: string
-     * }
-     */
-  async getPreSignedUrl (configMap: IStringKeyMap): Promise<string> {
+   * 获取预签名url
+   * @param configMap
+   * configMap = {
+   * bucketName: string,
+   * region: string,
+   * key: string,
+   * expires: number,
+   * customUrl: string
+   * }
+   */
+  async getPreSignedUrl(configMap: IStringKeyMap): Promise<string> {
     const { bucketName, region, key, expires } = configMap
     try {
       await this.getDogeCloudToken()
       const options = Object.assign({}, this.baseOptions) as S3ClientConfig
       options.region = String(region) || 'us-east-1'
       const client = new S3Client(options)
-      const signedUrl = await getSignedUrl(client, new GetObjectCommand({
-        Bucket: bucketName,
-        Key: key
-      }), {
-        expiresIn: expires || 3600
-      })
+      const signedUrl = await getSignedUrl(
+        client,
+        new GetObjectCommand({
+          Bucket: bucketName,
+          Key: key
+        }),
+        {
+          expiresIn: expires || 3600
+        }
+      )
       return signedUrl
     } catch (error) {
       this.logParam(error, 'getPreSignedUrl')
@@ -591,7 +685,7 @@ class S3plistApi {
    * 新建文件夹
    * @param configMap
    */
-  async createBucketFolder (configMap: IStringKeyMap): Promise<boolean> {
+  async createBucketFolder(configMap: IStringKeyMap): Promise<boolean> {
     const { bucketName, region, key } = configMap
     let result = false
     try {
@@ -619,7 +713,7 @@ class S3plistApi {
    * upload file
    * @param configMap
    */
-  async uploadBucketFile (configMap: IStringKeyMap): Promise<boolean> {
+  async uploadBucketFile(configMap: IStringKeyMap): Promise<boolean> {
     const { fileArray } = configMap
     // fileArray = [{
     //   bucketName: string,
@@ -632,7 +726,15 @@ class S3plistApi {
     fileArray.forEach((item: any) => {
       item.key.startsWith('/') && (item.key = item.key.slice(1))
     })
-    const allowedAcl = ['private', 'public-read', 'public-read-write', 'aws-exec-read', 'authenticated-read', 'bucket-owner-read', 'bucket-owner-full-control']
+    const allowedAcl = [
+      'private',
+      'public-read',
+      'public-read-write',
+      'aws-exec-read',
+      'authenticated-read',
+      'bucket-owner-read',
+      'bucket-owner-full-control'
+    ]
     for (const item of fileArray) {
       const { bucketName, region, key, filePath, fileName, aclForUpload } = item
       const id = `${bucketName}-${String(region)}-${key}-${filePath}`
@@ -682,36 +784,39 @@ class S3plistApi {
       parallelUploads3.on('httpUploadProgress', (progress: Progress) => {
         instance.updateUploadTask({
           id,
-          progress: progress.loaded && progress.total ? Math.floor(progress.loaded / progress.total * 100) : 0,
+          progress: progress.loaded && progress.total ? Math.floor((progress.loaded / progress.total) * 100) : 0,
           status: uploadTaskSpecialStatus.uploading
         })
       })
-      parallelUploads3.done().then((data) => {
-        if (data.$metadata.httpStatusCode === 200) {
-          instance.updateUploadTask({
-            id,
-            progress: 100,
-            status: uploadTaskSpecialStatus.uploaded,
-            finishTime: new Date().toLocaleString()
-          })
-        } else {
+      parallelUploads3
+        .done()
+        .then(data => {
+          if (data.$metadata.httpStatusCode === 200) {
+            instance.updateUploadTask({
+              id,
+              progress: 100,
+              status: uploadTaskSpecialStatus.uploaded,
+              finishTime: new Date().toLocaleString()
+            })
+          } else {
+            instance.updateUploadTask({
+              id,
+              progress: 0,
+              status: commonTaskStatus.failed,
+              finishTime: new Date().toLocaleString()
+            })
+          }
+        })
+        .catch(error => {
+          this.logParam(error, 'uploadBucketFile')
           instance.updateUploadTask({
             id,
             progress: 0,
             status: commonTaskStatus.failed,
+            response: JSON.stringify(error),
             finishTime: new Date().toLocaleString()
           })
-        }
-      }).catch((error) => {
-        this.logParam(error, 'uploadBucketFile')
-        instance.updateUploadTask({
-          id,
-          progress: 0,
-          status: commonTaskStatus.failed,
-          response: JSON.stringify(error),
-          finishTime: new Date().toLocaleString()
         })
-      })
     }
     return true
   }
@@ -720,7 +825,7 @@ class S3plistApi {
    * 下载文件
    * @param configMap
    */
-  async downloadBucketFile (configMap: IStringKeyMap): Promise<boolean> {
+  async downloadBucketFile(configMap: IStringKeyMap): Promise<boolean> {
     const { downloadPath, fileArray, maxDownloadFileCount } = configMap
     const instance = UpDownTaskQueue.getInstance()
     const promises = [] as any
@@ -745,19 +850,21 @@ class S3plistApi {
         expires: 36000,
         customUrl
       })
-      promises.push(() => new Promise((resolve, reject) => {
-        NewDownloader(instance, preSignedUrl, id, savedFilePath, this.logger, this.proxy)
-          .then((res: boolean) => {
-            if (res) {
-              resolve(res)
-            } else {
-              reject(res)
-            }
+      promises.push(
+        () =>
+          new Promise((resolve, reject) => {
+            NewDownloader(instance, preSignedUrl, id, savedFilePath, this.logger, this.proxy).then((res: boolean) => {
+              if (res) {
+                resolve(res)
+              } else {
+                reject(res)
+              }
+            })
           })
-      }))
+      )
     }
     const pool = new ConcurrencyPromisePool(maxDownloadFileCount)
-    pool.all(promises).catch((error) => {
+    pool.all(promises).catch(error => {
       this.logParam(error, 'downloadBucketFile')
     })
     return true

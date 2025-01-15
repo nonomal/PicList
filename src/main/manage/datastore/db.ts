@@ -1,20 +1,19 @@
-/* eslint-disable */
 import { JSONStore } from '@picgo/store'
 import { IJSON } from '@picgo/store/dist/types'
-import { ManageApiType, ManageConfigType } from '~/universal/types/manage'
+
+import { IManageApiType, IManageConfigType } from '#/types/manage'
 
 class ManageDB {
-  readonly #ctx: ManageApiType
+  readonly #ctx: IManageApiType
   readonly #db: JSONStore
-  constructor (ctx: ManageApiType) {
+  constructor(ctx: IManageApiType) {
     this.#ctx = ctx
     this.#db = new JSONStore(this.#ctx.configPath)
-    let initParams: IStringKeyMap = {
+    const initParams: IStringKeyMap = {
       picBed: {},
-      settings: {},
-      currentPicBed: 'placeholder'
+      settings: {}
     }
-    for (let key in initParams) {
+    for (const key in initParams) {
       if (!this.#db.has(key)) {
         try {
           this.#db.set(key, initParams[key])
@@ -26,37 +25,37 @@ class ManageDB {
     }
   }
 
-  read (flush?: boolean): IJSON {
+  read(flush?: boolean): IJSON {
     return this.#db.read(flush)
   }
 
-  get (key: string = ''): any {
+  get(key: string = ''): any {
     this.read(true)
     return this.#db.get(key)
   }
 
-  set (key: string, value: any): void {
+  set(key: string, value: any): void {
     this.read(true)
     return this.#db.set(key, value)
   }
 
-  has (key: string): boolean {
+  has(key: string): boolean {
     this.read(true)
     return this.#db.has(key)
   }
 
-  unset (key: string, value: any): boolean {
+  unset(key: string, value: any): boolean {
     this.read(true)
     return this.#db.unset(key, value)
   }
 
-  saveConfig (config: Partial<ManageConfigType>): void {
+  saveConfig(config: Partial<IManageConfigType>): void {
     Object.keys(config).forEach((name: string) => {
       this.set(name, config[name])
     })
   }
 
-  removeConfig (config: ManageConfigType): void {
+  removeConfig(config: IManageConfigType): void {
     Object.keys(config).forEach((name: string) => {
       this.unset(name, config[name])
     })

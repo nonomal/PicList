@@ -1,15 +1,13 @@
 <template>
   <div class="toolbox-handler">
-    <ElButton
-      type="text"
-      @click="() => props.handler(value)"
-    >
+    <ElButton type="primary" :link="true" @click="() => props.handler(value)">
       {{ props.handlerText }}
     </ElButton>
   </div>
 </template>
+
 <script lang="ts" setup>
-import { IToolboxItemCheckStatus } from '~/universal/types/enum'
+import { IToolboxItemCheckStatus } from '#/types/enum'
 
 interface IProps {
   status: IToolboxItemCheckStatus
@@ -19,12 +17,10 @@ interface IProps {
 }
 
 const props = defineProps<IProps>()
-
 </script>
 <script lang="ts">
 export default {
   name: 'ToolboxHandler'
 }
 </script>
-<style lang='stylus'>
-</style>
+<style lang="stylus"></style>

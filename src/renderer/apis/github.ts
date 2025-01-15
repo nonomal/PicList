@@ -1,5 +1,7 @@
 import { Octokit } from '@octokit/rest'
 
+import { deleteFailedLog, deleteLog } from '#/utils/deleteLog'
+
 interface IConfigMap {
   fileName: string
   hash: string
@@ -7,21 +9,23 @@ interface IConfigMap {
 }
 
 export default class GithubApi {
-  static #createOctokit (token: string) {
+  static #createOctokit(token: string) {
     return new Octokit({
       auth: token
     })
   }
 
-  static #createKey (path: string | undefined, fileName: string): string {
+  static #createKey(path: string | undefined, fileName: string): string {
     const formatedFileName = fileName.replace(/%2F/g, '/')
-    return path && path !== '/'
-      ? `${path.replace(/^\/+|\/+$/, '')}/${formatedFileName}`
-      : formatedFileName
+    return path && path !== '/' ? `${path.replace(/^\/+|\/+$/, '')}/${formatedFileName}` : formatedFileName
   }
 
-  static async delete (configMap: IConfigMap): Promise<boolean> {
-    const { fileName, hash, config: { repo, token, branch, path } } = configMap
+  static async delete(configMap: IConfigMap): Promise<boolean> {
+    const {
+      fileName,
+      hash,
+      config: { repo, token, branch, path }
+    } = configMap
     const [owner, repoName] = repo.split('/')
     const octokit = GithubApi.#createOctokit(token)
     const key = GithubApi.#createKey(path, fileName)
@@ -34,9 +38,14 @@ export default class GithubApi {
         sha: hash,
         branch
       })
-      return status === 200
-    } catch (error) {
-      console.error(error)
+      if (status === 200) {
+        deleteLog(fileName, 'GitHub')
+        return true
+      }
+      deleteLog(fileName, 'GitHub', false)
+      return false
+    } catch (error: any) {
+      deleteFailedLog(fileName, 'GitHub', error)
       return false
     }
   }

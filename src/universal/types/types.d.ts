@@ -35,6 +35,8 @@ interface IServerConfig {
   enable: boolean
 }
 
+// Sync
+
 interface ISyncConfig {
   type: string
   file?: string
@@ -225,6 +227,9 @@ interface INPMSearchResultObject {
     author: {
       name: string
     }
+    publisher: {
+      username: string
+    }
     links: {
       npm: string
       homepage: string
@@ -292,11 +297,6 @@ type PartialKeys<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 interface shortKeyHandlerMap {
   from: string
   handle: IShortKeyHandler
-}
-
-// PicBeds
-interface ITelegraphConfig {
-  proxy?: string
 }
 
 interface ILocalConfig {
@@ -528,3 +528,9 @@ interface IUploaderConfigItem {
 type IUploaderConfigListItem = IStringKeyMap & IUploaderListItemMetaInfo
 
 type ICheckBoxValueType = boolean | string | number
+
+interface IHTTPProxy {
+  host: string
+  port: number
+  protocol: string
+}

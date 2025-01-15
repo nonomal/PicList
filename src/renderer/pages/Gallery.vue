@@ -1,21 +1,12 @@
 <template>
-  <div
-    id="gallery-view"
-    :style="handleBarActive? 'height: 85%;': 'height: 95%;'"
-  >
+  <div id="gallery-view" :style="handleBarActive ? 'height: 85%;' : 'height: 95%;'">
     <div class="view-title">
       {{ $T('GALLERY') }} - {{ filterList.length }}
-      <el-icon
-        style="margin-left: 4px"
-        class="cursor-pointer"
-        @click="toggleHandleBar"
-      >
+      <el-icon style="margin-left: 4px" class="cursor-pointer" @click="toggleHandleBar">
         <CaretBottom v-show="!handleBarActive" />
         <CaretTop v-show="handleBarActive" />
       </el-icon>
-      <span
-        style="position: absolute; right: 0; top: 0; margin-right: 20px; font-size: 0.8em; color: #fff;"
-      >
+      <span style="position: absolute; right: 0; top: 0; margin-right: 20px; font-size: 0.8em; color: #fff">
         {{ $T('GALLERY_SYNC_DELETE') }}
         <el-switch
           v-model="deleteCloud"
@@ -23,10 +14,7 @@
           :inactive-text="$T('SETTINGS_CLOSE')"
           @change="handleDeleteCloudFile"
         />
-        <el-button
-          type="text"
-          @click="refreshPage"
-        >
+        <el-button type="primary" :link="true" @click="refreshPage">
           <el-tooltip
             class="item"
             effect="dark"
@@ -35,10 +23,7 @@
             :persistent="false"
             teleported
           >
-            <el-icon
-              size="25"
-              style="cursor: pointer; margin-left: 10px;"
-            >
+            <el-icon size="25" style="cursor: pointer; margin-left: 10px">
               <Refresh />
             </el-icon>
           </el-tooltip>
@@ -47,14 +32,8 @@
     </div>
     <transition name="el-zoom-in-top">
       <el-row v-show="handleBarActive">
-        <el-col
-          :span="22"
-          :offset="1"
-        >
-          <el-row
-            class="handle-bar"
-            :gutter="16"
-          >
+        <el-col :span="22" :offset="1">
+          <el-row class="handle-bar" :gutter="16">
             <el-col :span="5">
               <el-select
                 v-model="choosedPicBed"
@@ -66,12 +45,7 @@
                 :persistent="false"
                 teleported
               >
-                <el-option
-                  v-for="item in picBed"
-                  :key="item.type"
-                  :label="item.name"
-                  :value="item.type"
-                />
+                <el-option v-for="item in picBedGlobal" :key="item.type" :label="item.name" :value="item.type" />
               </el-select>
             </el-col>
             <el-col :span="10">
@@ -87,11 +61,7 @@
               />
             </el-col>
             <el-col :span="1">
-              <el-divider
-                direction="vertical"
-                style="height: 100%;"
-                border-style="hidden"
-              />
+              <el-divider direction="vertical" style="height: 100%" border-style="hidden" />
             </el-col>
             <el-col :span="3">
               <el-select
@@ -103,12 +73,7 @@
                 teleported
                 @change="handlePasteStyleChange"
               >
-                <el-option
-                  v-for="(value, key) in pasteStyleMap"
-                  :key="key"
-                  :label="key"
-                  :value="value"
-                />
+                <el-option v-for="(value, key) in pasteStyleMap" :key="key" :label="key" :value="value" />
               </el-select>
             </el-col>
             <el-col :span="3">
@@ -121,23 +86,12 @@
                 teleported
                 @change="handleUseShortUrlChange"
               >
-                <el-option
-                  v-for="(value, key) in shortURLMap"
-                  :key="key"
-                  :label="key"
-                  :value="value"
-                />
+                <el-option v-for="(value, key) in shortURLMap" :key="key" :label="key" :value="value" />
               </el-select>
             </el-col>
             <el-col :span="2">
-              <el-dropdown
-                teleported
-              >
-                <el-button
-                  size="small"
-                  type="primary"
-                  :icon="Sort"
-                >
+              <el-dropdown teleported>
+                <el-button size="small" type="primary" :icon="Sort">
                   {{ $T('MANAGE_BUCKET_SORT_TITLE') }}
                 </el-button>
                 <template #dropdown>
@@ -145,69 +99,42 @@
                     {{ $T('MANAGE_BUCKET_SORT_NAME') }}
                   </el-dropdown-item>
                   <el-dropdown-item @click="sortFile('ext')">
-                    {{ $T('MANAGE_BUCKET_SORT_TYPE') }}
+                    {{ $T('MANAGE_BUCKET_SORT_EXT') }}
                   </el-dropdown-item>
                   <el-dropdown-item @click="sortFile('time')">
                     {{ $T('MANAGE_BUCKET_SORT_TIME') }}
                   </el-dropdown-item>
                   <el-dropdown-item @click="sortFile('check')">
-                    {{ $T('MANAGE_BUCKET_SORT_SELECTED') }}
+                    {{ $T('MANAGE_BUCKET_SORT_CHECK') }}
                   </el-dropdown-item>
                 </template>
               </el-dropdown>
             </el-col>
           </el-row>
-          <el-row
-            class="handle-bar"
-            :gutter="16"
-          >
+          <el-row class="handle-bar" :gutter="16">
             <el-col :span="5">
-              <el-input
-                v-model="searchText"
-                :placeholder="$T('GALLERY_SEARCH_FILENAME')"
-                size="small"
-              >
+              <el-input v-model="searchText" :placeholder="$T('GALLERY_SEARCH_FILENAME')" size="small">
                 <template #suffix>
-                  <el-icon
-                    class="el-input__icon"
-                    style="cursor: pointer;"
-                    @click="cleanSearch"
-                  >
+                  <el-icon class="el-input__icon" style="cursor: pointer" @click="cleanSearch">
                     <close />
                   </el-icon>
                 </template>
               </el-input>
             </el-col>
             <el-col :span="6">
-              <el-input
-                v-model="searchTextURL"
-                :placeholder="$T('GALLERY_SEARCH_URL')"
-                size="small"
-              >
+              <el-input v-model="searchTextURL" :placeholder="$T('GALLERY_SEARCH_URL')" size="small">
                 <template #suffix>
-                  <el-icon
-                    class="el-input__icon"
-                    style="cursor: pointer;"
-                    @click="cleanSearchUrl"
-                  >
+                  <el-icon class="el-input__icon" style="cursor: pointer" @click="cleanSearchUrl">
                     <close />
                   </el-icon>
                 </template>
               </el-input>
             </el-col>
             <el-col :span="1">
-              <el-divider
-                direction="vertical"
-                style="height: 100%;"
-                border-style="hidden"
-              />
+              <el-divider direction="vertical" style="height: 100%" border-style="hidden" />
             </el-col>
             <el-col :span="3">
-              <div
-                class="item-base copy round"
-                :class="{ active: isMultiple(choosedList) }"
-                @click="multiCopy"
-              >
+              <div class="item-base copy round" :class="{ active: isMultiple(choosedList) }" @click="multiCopy">
                 {{ $T('COPY') }}
               </div>
             </el-col>
@@ -215,41 +142,27 @@
               <div
                 class="item-base all-pick round"
                 :class="{ active: filterList.length > 0 }"
-                @click="() => isShowBatchRenameDialog = true"
+                @click="() => (isShowBatchRenameDialog = true)"
               >
                 {{ $T('GALLERY_CHANGE_URL') }}
               </div>
             </el-col>
             <el-col :span="3">
-              <div
-                class="item-base delete round"
-                :class="{ active: isMultiple(choosedList) }"
-                @click="multiRemove"
-              >
+              <div class="item-base delete round" :class="{ active: isMultiple(choosedList) }" @click="multiRemove">
                 {{ $T('DELETE') }}
               </div>
             </el-col>
             <el-col :span="3">
-              <div
-                class="item-base all-pick round"
-                :class="{ active: filterList.length > 0 }"
-                @click="toggleSelectAll"
-              >
-                {{ isAllSelected? $T('CANCEL'): $T('SELECT_ALL') }}
+              <div class="item-base all-pick round" :class="{ active: filterList.length > 0 }" @click="toggleSelectAll">
+                {{ isAllSelected ? $T('CANCEL') : $T('SELECT_ALL') }}
               </div>
             </el-col>
           </el-row>
         </el-col>
       </el-row>
     </transition>
-    <el-row
-      class="gallery-list"
-      :class="{ small: handleBarActive }"
-    >
-      <el-col
-        :span="22"
-        :offset="1"
-      >
+    <el-row class="gallery-list" :class="{ small: handleBarActive }">
+      <el-col :span="22" :offset="1">
         <el-row :gutter="16">
           <photo-slider
             :items="filterList"
@@ -270,43 +183,26 @@
             :xl="2"
             class="gallery-list__img"
           >
-            <div
-              class="gallery-list__item"
-              @click="zoomImage(index)"
-            >
+            <div class="gallery-list__item" @click="zoomImage(index)">
               <img
-                v-lazy="item.galleryPath || item.imgUrl"
+                v-lazy="{
+                  src: item.galleryPath || item.imgUrl
+                }"
                 class="gallery-list__item-img"
-              >
+              />
             </div>
-            <div
-              class="gallery-list__file-name"
-              :title="item.fileName"
-            >
+            <div class="gallery-list__file-name" :title="item.fileName">
               {{ formatFileName(item.fileName || '') }}
             </div>
-            <el-row
-              class="gallery-list__tool-panel"
-              justify="space-between"
-              align="middle"
-            >
+            <el-row class="gallery-list__tool-panel" justify="space-between" align="middle">
               <el-row>
-                <el-icon
-                  class="cursor-pointer document"
-                  @click="copy(item)"
-                >
+                <el-icon class="cursor-pointer document" @click="copy(item)">
                   <Document />
                 </el-icon>
-                <el-icon
-                  class="cursor-pointer edit"
-                  @click="openDialog(item)"
-                >
+                <el-icon class="cursor-pointer edit" @click="openDialog(item)">
                   <Edit />
                 </el-icon>
-                <el-icon
-                  class="cursor-pointer delete"
-                  @click="remove(item)"
-                >
+                <el-icon class="cursor-pointer delete" @click="remove(item)">
                   <Delete />
                 </el-icon>
               </el-row>
@@ -331,10 +227,7 @@
         <el-button @click="dialogVisible = false">
           {{ $T('CANCEL') }}
         </el-button>
-        <el-button
-          type="primary"
-          @click="confirmModify"
-        >
+        <el-button type="primary" @click="confirmModify">
           {{ $T('CONFIRM') }}
         </el-button>
       </template>
@@ -348,10 +241,7 @@
       destroy-on-close
       append-to-body
     >
-      <el-link
-        :underline="false"
-        style="margin-bottom: 10px;"
-      >
+      <el-link :underline="false" style="margin-bottom: 10px">
         <span>
           {{ $T('MANAGE_BUCKET_RENAME_FILE_INPUT_A') + $T('GALLERY_MATCHED') + mathcedCount + ' ' }}
           <el-tooltip
@@ -361,9 +251,7 @@
             :persistent="false"
             teleported
           >
-            <el-icon
-              color="#409EFF"
-            >
+            <el-icon color="#409EFF">
               <InfoFilled />
             </el-icon>
           </el-tooltip>
@@ -374,31 +262,16 @@
         :placeholder="$T('MANAGE_BUCKET_RENAME_FILE_INPUT_A_PLACEHOLDER')"
         clearable
       />
-      <el-link
-        :underline="false"
-        style="margin-bottom: 10px;margin-top: 10px;"
-      >
+      <el-link :underline="false" style="margin-bottom: 10px; margin-top: 10px">
         <span>
           {{ $T('MANAGE_BUCKET_RENAME_FILE_INPUT_B') }}
-          <el-popover
-            effect="light"
-            placement="right"
-            width="280"
-            :persistent="false"
-            teleported
-          >
+          <el-popover effect="light" placement="right" width="280" :persistent="false" teleported>
             <template #reference>
-              <el-icon
-                color="#409EFF"
-              >
+              <el-icon color="#409EFF">
                 <InfoFilled />
               </el-icon>
             </template>
-            <el-descriptions
-              :column="1"
-              style="width: 250px;"
-              border
-            >
+            <el-descriptions :column="1" style="width: 250px" border>
               <el-descriptions-item
                 v-for="(item, index) in customRenameFormatTable"
                 :key="index"
@@ -409,7 +282,7 @@
                 {{ item.description }}
               </el-descriptions-item>
               <el-descriptions-item
-                v-for="(item, index) in customRenameFormatTable.slice(0, customRenameFormatTable.length-1)"
+                v-for="(item, index) in customRenameFormatTable.slice(0, customRenameFormatTable.length - 1)"
                 :key="index"
                 :label="item.placeholderB"
                 align="center"
@@ -417,90 +290,66 @@
               >
                 {{ item.descriptionB }}
               </el-descriptions-item>
-              <el-descriptions-item
-                label="{auto}"
-                align="center"
-                label-style="width: 100px;"
-              >
+              <el-descriptions-item label="{auto}" align="center" label-style="width: 100px;">
                 {{ $T('MANAGE_BUCKET_RENAME_FILE_TABLE_IID') }}
               </el-descriptions-item>
             </el-descriptions>
           </el-popover>
         </span>
       </el-link>
-      <el-input
-        v-model="batchRenameReplace"
-        placeholder="Ex. {Y}-{m}-{uuid}"
-        clearable
-      />
-      <div
-        style="margin-top: 10px;align-items: center;display: flex;justify-content: flex-end;"
-      >
+      <el-input v-model="batchRenameReplace" placeholder="Ex. {Y}-{m}-{uuid}" clearable />
+      <div style="margin-top: 10px; align-items: center; display: flex; justify-content: flex-end">
         <el-button
           type="danger"
-          style="margin-right: 30px;"
+          style="margin-right: 30px"
           plain
           :icon="Close"
-          @click="() => {isShowBatchRenameDialog = false}"
+          @click="
+            () => {
+              isShowBatchRenameDialog = false
+            }
+          "
         >
           {{ $T('MANAGE_BUCKET_RENAME_FILE_CANCEL') }}
         </el-button>
-        <el-button
-          type="primary"
-          plain
-          :icon="Edit"
-          @click="handleBatchRename()"
-        >
+        <el-button type="primary" plain :icon="Edit" @click="handleBatchRename()">
           {{ $T('MANAGE_BUCKET_RENAME_FILE_CONFIRM') }}
         </el-button>
       </div>
     </el-dialog>
   </div>
 </template>
+
 <script lang="ts" setup>
-// 类型声明
+import { ipcRenderer, clipboard } from 'electron'
+import { CheckboxValueType, ElMessageBox, ElNotification, ElMessage } from 'element-plus'
+import {
+  InfoFilled,
+  Close,
+  CaretBottom,
+  Document,
+  Edit,
+  Delete,
+  CaretTop,
+  Sort,
+  Refresh
+} from '@element-plus/icons-vue'
+import path from 'path'
+import { computed, nextTick, onActivated, onBeforeUnmount, onBeforeMount, reactive, ref, watch } from 'vue'
+import { onBeforeRouteUpdate } from 'vue-router'
 import type { IResult } from '@picgo/store/dist/types'
 
-// 事件常量
-import { PASTE_TEXT, GET_PICBEDS } from '#/events/constants'
-
-// Element Plus 组件
-import { CheckboxValueType, ElMessageBox, ElNotification, ElMessage } from 'element-plus'
-
-// Element Plus 图标
-import { InfoFilled, Close, CaretBottom, Document, Edit, Delete, CaretTop, Sort, Refresh } from '@element-plus/icons-vue'
-
-// Electron 相关
-import {
-  ipcRenderer,
-  clipboard,
-  IpcRendererEvent
-} from 'electron'
-
-// Vue 相关
-import { computed, nextTick, onActivated, onBeforeUnmount, onBeforeMount, reactive, ref, watch } from 'vue'
-
-// 数据发送工具函数
-import { getConfig, saveConfig, sendToMain } from '@/utils/dataSender'
-
-// Vue Router 相关
-import { onBeforeRouteUpdate } from 'vue-router'
-
-// 国际化函数
-import { T as $T } from '@/i18n/index'
-
-// 数据库操作
-import $$db from '@/utils/db'
-
-// API 接口
 import ALLApi from '@/apis/allApi'
+import { T as $T } from '@/i18n/index'
+import { customRenameFormatTable, customStrMatch, customStrReplace } from '@/manage/utils/common'
+import { sendRPC, triggerRPC } from '@/utils/common'
+import { getConfig, saveConfig } from '@/utils/dataSender'
+import $$db from '@/utils/db'
+import { picBedGlobal } from '@/utils/global'
 
-// 工具函数
-import { customRenameFormatTable, customStrMatch, customStrReplace } from '../manage/utils/common'
+import { configPaths } from '#/utils/configPaths'
 import { picBedsCanbeDeleted } from '#/utils/static'
-import path from 'path'
-import { configPaths } from '~/universal/utils/configPaths'
-import { IPasteStyle } from '~/universal/types/enum'
+import { IPasteStyle, IRPCActionType } from '#/types/enum'
 
 const images = ref<ImgInfo[]>([])
 const dialogVisible = ref(false)
@@ -540,14 +389,14 @@ const fileSortExtReverse = ref(false)
 const isShowBatchRenameDialog = ref(false)
 const batchRenameMatch = ref('')
 const batchRenameReplace = ref('')
-const mathcedCount = computed(() => {
-  const matchedFiles = filterList.value.filter((item: any) => {
-    return customStrMatch(item.imgUrl, batchRenameMatch.value)
-  })
-  return matchedFiles.length
-})
 const dateRange = ref('')
-const picBed = ref<IPicBedType[]>([])
+
+const mathcedCount = computed(() => {
+  return filterList.value.filter((item: any) => {
+    return customStrMatch(item.imgUrl, batchRenameMatch.value)
+  }).length
+})
+
 onBeforeRouteUpdate((to, from) => {
   if (from.name === 'gallery') {
     clearChoosedList()
@@ -557,10 +406,8 @@ onBeforeRouteUpdate((to, from) => {
   }
 })
 
-// init deleteCloud
-async function initDeleteCloud () {
-  const config = await getConfig() as any
-  deleteCloud.value = config.settings.deleteCloudFile || false
+async function initDeleteCloud() {
+  deleteCloud.value = (await getConfig<boolean>(configPaths.settings.deleteCloudFile)) || false
 }
 
 onBeforeMount(async () => {
@@ -569,48 +416,31 @@ onBeforeMount(async () => {
       updateGallery()
     })
   })
-  sendToMain(GET_PICBEDS)
-  ipcRenderer.on(GET_PICBEDS, getPicBeds)
   updateGallery()
-
   document.addEventListener('keydown', handleDetectShiftKey)
   document.addEventListener('keyup', handleDetectShiftKey)
 })
 
-function handleDetectShiftKey (event: KeyboardEvent) {
+function handleDetectShiftKey(event: KeyboardEvent) {
   if (event.key === 'Shift') {
-    if (event.type === 'keydown') {
-      isShiftKeyPress.value = true
-    } else if (event.type === 'keyup') {
-      isShiftKeyPress.value = false
-    }
+    isShiftKeyPress.value = event.type === 'keydown'
   }
 }
 
 const filterList = computed(() => {
-  return getGallery()
+  const res = getGallery()
+  return res
 })
 
 const isAllSelected = computed(() => {
-  const values = Object.values(choosedList)
-  if (values.length === 0) {
-    return false
-  } else {
-    return filterList.value.every(item => {
-      return choosedList[item.id!]
-    })
-  }
+  return Object.values(choosedList).length > 0 && filterList.value.every(item => choosedList[item.id!])
 })
 
-function formatFileName (name: string) {
+function formatFileName(name: string) {
   return path.basename(name)
 }
 
-function getPicBeds (event: IpcRendererEvent, picBeds: IPicBedType[]) {
-  picBed.value = picBeds
-}
-
-function getGallery (): IGalleryItem[] {
+function getGallery(): IGalleryItem[] {
   if (searchText.value || choosedPicBed.value.length > 0 || searchTextURL.value || dateRange.value) {
     return images.value
       .filter(item => {
@@ -633,11 +463,12 @@ function getGallery (): IGalleryItem[] {
           isIncludesDateRange = date >= new Date(start).getTime() && date <= new Date(end).getTime() + 86400000
         }
         return isIncludesSearchText && isInChoosedPicBed && isIncludesSearchTextURL && isIncludesDateRange
-      }).map(item => {
+      })
+      .map(item => {
         return {
           ...item,
-          src: item.imgUrl || '',
-          key: (item.id || `${Date.now()}`),
+          src: item.galleryPath || item.imgUrl || '',
+          key: item.id || `${Date.now()}`,
           intro: item.fileName || ''
         }
       })
@@ -645,23 +476,26 @@ function getGallery (): IGalleryItem[] {
     return images.value.map(item => {
       return {
         ...item,
-        src: item.imgUrl || '',
-        key: (item.id || `${Date.now()}`),
+        src: item.galleryPath || item.imgUrl || '',
+        key: item.id || `${Date.now()}`,
         intro: item.fileName || ''
       }
     })
   }
 }
 
-async function updateGallery () {
-  images.value = (await $$db.get({ orderBy: 'desc' })).data
+async function updateGallery() {
+  images.value = (await $$db.get({ orderBy: 'desc' }))!.data
 }
 
-watch(() => filterList, () => {
-  clearChoosedList()
-})
+watch(
+  () => filterList,
+  () => {
+    clearChoosedList()
+  }
+)
 
-function handleChooseImage (val: CheckboxValueType, index: number) {
+function handleChooseImage(val: CheckboxValueType, index: number) {
   if (val === true) {
     handleBarActive.value = true
     if (lastChoosed.value !== -1 && isShiftKeyPress.value) {
@@ -676,11 +510,11 @@ function handleChooseImage (val: CheckboxValueType, index: number) {
   }
 }
 
-function refreshPage () {
-  ipcRenderer.send('refreshSettingWindow')
+function refreshPage() {
+  sendRPC(IRPCActionType.REFRESH_SETTING_WINDOW)
 }
 
-function clearChoosedList () {
+function clearChoosedList() {
   isShiftKeyPress.value = false
   Object.keys(choosedList).forEach(key => {
     choosedList[key] = false
@@ -688,98 +522,107 @@ function clearChoosedList () {
   lastChoosed.value = -1
 }
 
-function zoomImage (index: number) {
+function zoomImage(index: number) {
   gallerySliderControl.index = index
   gallerySliderControl.visible = true
   changeZIndexForGallery(true)
 }
 
-function changeZIndexForGallery (isOpen: boolean) {
+function changeZIndexForGallery(isOpen: boolean) {
   if (isOpen) {
-    // @ts-ignore
+    // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
     document.querySelector('.main-content.el-row').style.zIndex = 101
   } else {
-    // @ts-ignore
+    // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
     document.querySelector('.main-content.el-row').style.zIndex = 10
   }
 }
 
-function handleClose () {
+function handleClose() {
   gallerySliderControl.index = 0
   gallerySliderControl.visible = false
   changeZIndexForGallery(false)
 }
 
-async function copy (item: ImgInfo) {
+async function copy(item: ImgInfo) {
   item.config = JSON.parse(JSON.stringify(item.config) || '{}')
-  const copyLink = await ipcRenderer.invoke(PASTE_TEXT, item)
+  const result = await triggerRPC<[string, string]>(IRPCActionType.GALLERY_PASTE_TEXT, item)
+  if (result && result[1] && item.id) {
+    await $$db.updateById(item.id, {
+      shortUrl: result[1]
+    })
+  }
   const obj = {
     title: $T('COPY_LINK_SUCCEED'),
-    body: copyLink
-    // sometimes will cause lagging
-    // icon: item.url || item.imgUrl
+    body: result ? result[0] : ''
   }
   const myNotification = new Notification(obj.title, obj)
   myNotification.onclick = () => {
     return true
   }
+  updateGallery()
 }
 
-function remove (item: ImgInfo) {
+function remove(item: ImgInfo) {
   if (!item.id) return
   $confirm($T('TIPS_REMOVE_LINK'), $T('TIPS_NOTICE'), {
     confirmButtonText: $T('CONFIRM'),
     cancelButtonText: $T('CANCEL'),
     type: 'warning'
-  }).then(async () => {
-    const file = await $$db.getById(item.id!)
-    if (await getConfig(configPaths.settings.deleteCloudFile) && picBedsCanbeDeleted.includes(item?.type || 'placeholder')) {
-      const result = await ALLApi.delete(item)
-      if (result) {
-        ElNotification({
-          title: $T('GALLERY_SYNC_DELETE_NOTICE_TITLE'),
-          message: `${item.fileName} ${$T('GALLERY_SYNC_DELETE_NOTICE_SUCCEED')}`,
-          type: 'success'
-        })
-      } else {
-        ElNotification({
-          title: $T('GALLERY_SYNC_DELETE_NOTICE_TITLE'),
-          message: `${item.fileName} ${$T('GALLERY_SYNC_DELETE_NOTICE_FAILED')}`,
-          type: 'error'
-        })
+  })
+    .then(async () => {
+      const file = await $$db.getById(item.id!)
+      if (
+        (await getConfig(configPaths.settings.deleteCloudFile)) &&
+        picBedsCanbeDeleted.includes(item?.type || 'placeholder')
+      ) {
+        const result = await ALLApi.delete(item)
+        if (result) {
+          ElNotification({
+            title: $T('GALLERY_SYNC_DELETE_NOTICE_TITLE'),
+            message: `${item.fileName} ${$T('GALLERY_SYNC_DELETE_NOTICE_SUCCEED')}`,
+            type: 'success'
+          })
+        } else {
+          ElNotification({
+            title: $T('GALLERY_SYNC_DELETE_NOTICE_TITLE'),
+            message: `${item.fileName} ${$T('GALLERY_SYNC_DELETE_NOTICE_FAILED')}`,
+            type: 'error'
+          })
+          return true
+        }
+      }
+      await $$db.removeById(item.id!)
+      sendRPC(IRPCActionType.GALLERY_REMOVE_FILES, [file])
+      const obj = {
+        title: $T('OPERATION_SUCCEED'),
+        body: ''
+      }
+      const myNotification = new Notification(obj.title, obj)
+      myNotification.onclick = () => {
         return true
       }
-    }
-    await $$db.removeById(item.id!)
-    sendToMain('removeFiles', [file])
-    const obj = {
-      title: $T('OPERATION_SUCCEED'),
-      body: ''
-    }
-    const myNotification = new Notification(obj.title, obj)
-    myNotification.onclick = () => {
+      updateGallery()
+    })
+    .catch(e => {
+      console.log(e)
       return true
-    }
-    updateGallery()
-  }).catch((e) => {
-    console.log(e)
-    return true
-  })
+    })
 }
 
-function handleDeleteCloudFile (val: ICheckBoxValueType) {
+function handleDeleteCloudFile(val: ICheckBoxValueType) {
   saveConfig({
     [configPaths.settings.deleteCloudFile]: val
   })
 }
 
-function openDialog (item: ImgInfo) {
+function openDialog(item: ImgInfo) {
   imgInfo.id = item.id!
   imgInfo.imgUrl = item.imgUrl as string
   dialogVisible.value = true
 }
 
-async function confirmModify () {
+async function confirmModify() {
   await $$db.updateById(imgInfo.id, {
     imgUrl: imgInfo.imgUrl
   })
@@ -795,100 +638,108 @@ async function confirmModify () {
   updateGallery()
 }
 
-function cleanSearch () {
+function cleanSearch() {
   searchText.value = ''
 }
 
-function cleanSearchUrl () {
+function cleanSearchUrl() {
   searchTextURL.value = ''
 }
 
-function isMultiple (obj: IObj) {
+function isMultiple(obj: IObj) {
   return Object.values(obj).some(item => item)
 }
 
-function toggleSelectAll () {
+function toggleSelectAll() {
   const result = !isAllSelected.value
   filterList.value.forEach(item => {
     choosedList[item.id!] = result
   })
 }
 
-function multiRemove () {
-  // choosedList -> { [id]: true or false }; true means choosed. false means not choosed.
+function multiRemove() {
   const multiRemoveNumber = Object.values(choosedList).filter(item => item).length
   if (multiRemoveNumber) {
-    $confirm($T('TIPS_WILL_REMOVE_CHOOSED_IMAGES', {
-      m: multiRemoveNumber
-    }), $T('TIPS_NOTICE'), {
-      confirmButtonText: $T('CONFIRM'),
-      cancelButtonText: $T('CANCEL'),
-      type: 'warning'
-    }).then(async () => {
-      const files: IResult<ImgInfo>[] = []
-      const imageIDList = Object.keys(choosedList)
-      const isDeleteCloudFile = await getConfig(configPaths.settings.deleteCloudFile)
-      if (isDeleteCloudFile) {
-        for (let i = 0; i < imageIDList.length; i++) {
-          const key = imageIDList[i]
-          if (choosedList[key]) {
-            const file = await $$db.getById<ImgInfo>(key)
-            if (file) {
-              if (file.type !== undefined && picBedsCanbeDeleted.includes(file.type)) {
-                const result = await ALLApi.delete(file)
-                if (result) {
-                  ElNotification({
-                    title: $T('GALLERY_SYNC_DELETE'),
-                    message: `${file.fileName} ${$T('GALLERY_SYNC_DELETE_NOTICE_SUCCEED')}`,
-                    type: 'success',
-                    duration: multiRemoveNumber > 5 ? 1000 : 2000
-                  })
+    $confirm(
+      $T('TIPS_WILL_REMOVE_CHOOSED_IMAGES', {
+        m: multiRemoveNumber
+      }),
+      $T('TIPS_NOTICE'),
+      {
+        confirmButtonText: $T('CONFIRM'),
+        cancelButtonText: $T('CANCEL'),
+        type: 'warning'
+      }
+    )
+      .then(async () => {
+        const files: IResult<ImgInfo>[] = []
+        const imageIDList = Object.keys(choosedList)
+        const isDeleteCloudFile = await getConfig(configPaths.settings.deleteCloudFile)
+        if (isDeleteCloudFile) {
+          for (let i = 0; i < imageIDList.length; i++) {
+            const key = imageIDList[i]
+            if (choosedList[key]) {
+              const file = await $$db.getById<ImgInfo>(key)
+              if (file) {
+                if (file.type !== undefined && picBedsCanbeDeleted.includes(file.type)) {
+                  const result = await ALLApi.delete(file)
+                  if (result) {
+                    ElNotification({
+                      title: $T('GALLERY_SYNC_DELETE'),
+                      message: `${file.fileName} ${$T('GALLERY_SYNC_DELETE_NOTICE_SUCCEED')}`,
+                      type: 'success',
+                      duration: multiRemoveNumber > 5 ? 1000 : 2000
+                    })
+                    files.push(file)
+                    await $$db.removeById(key)
+                  } else {
+                    ElNotification({
+                      title: $T('GALLERY_SYNC_DELETE'),
+                      message: `${file.fileName} ${$T('GALLERY_SYNC_DELETE_NOTICE_FAILED')}`,
+                      type: 'error',
+                      duration: multiRemoveNumber > 5 ? 1000 : 2000
+                    })
+                  }
+                } else {
                   files.push(file)
                   await $$db.removeById(key)
-                } else {
-                  ElNotification({
-                    title: $T('GALLERY_SYNC_DELETE'),
-                    message: `${file.fileName} ${$T('GALLERY_SYNC_DELETE_NOTICE_FAILED')}`,
-                    type: 'error',
-                    duration: multiRemoveNumber > 5 ? 1000 : 2000
-                  })
                 }
               }
             }
           }
-        }
-      } else {
-        for (let i = 0; i < imageIDList.length; i++) {
-          const key = imageIDList[i]
-          if (choosedList[key]) {
-            const file = await $$db.getById<ImgInfo>(key)
-            if (file) {
-              files.push(file)
-              await $$db.removeById(key)
+        } else {
+          for (let i = 0; i < imageIDList.length; i++) {
+            const key = imageIDList[i]
+            if (choosedList[key]) {
+              const file = await $$db.getById<ImgInfo>(key)
+              if (file) {
+                files.push(file)
+                await $$db.removeById(key)
+              }
             }
           }
         }
-      }
-      clearChoosedList()
-      // TODO: check this
-      // choosedList = {} // 只有删除才能将这个置空
-      const obj = {
-        title: $T('OPERATION_SUCCEED'),
-        body: ''
-      }
-      sendToMain('removeFiles', files)
-      const myNotification = new Notification(obj.title, obj)
-      myNotification.onclick = () => {
+        clearChoosedList()
+        // TODO: check this
+        // choosedList = {} // 只有删除才能将这个置空
+        const obj = {
+          title: $T('OPERATION_SUCCEED'),
+          body: ''
+        }
+        sendRPC(IRPCActionType.GALLERY_REMOVE_FILES, files)
+        const myNotification = new Notification(obj.title, obj)
+        myNotification.onclick = () => {
+          return true
+        }
+        updateGallery()
+      })
+      .catch(() => {
         return true
-      }
-      updateGallery()
-    }).catch(() => {
-      return true
-    })
+      })
   }
 }
 
-async function multiCopy () {
+async function multiCopy() {
   if (Object.values(choosedList).some(item => item)) {
     const copyString: string[] = []
     // choosedList -> { [id]: true or false }; true means choosed. false means not choosed.
@@ -898,8 +749,13 @@ async function multiCopy () {
       if (choosedList[key]) {
         const item = await $$db.getById<ImgInfo>(key)
         if (item) {
-          const txt = await ipcRenderer.invoke(PASTE_TEXT, item)
-          copyString.push(txt)
+          const result = await triggerRPC<string>(IRPCActionType.GALLERY_PASTE_TEXT, item)
+          copyString.push(result ? result[0] : '')
+          if (result && result[1] && item.id) {
+            await $$db.updateById(item.id, {
+              shortUrl: result[1]
+            })
+          }
           choosedList[key] = false
         }
       }
@@ -913,24 +769,25 @@ async function multiCopy () {
     myNotification.onclick = () => {
       return true
     }
+    updateGallery()
   }
 }
 
-function toggleHandleBar () {
+function toggleHandleBar() {
   handleBarActive.value = !handleBarActive.value
 }
 
-async function handlePasteStyleChange (val: string) {
+async function handlePasteStyleChange(val: string) {
   saveConfig(configPaths.settings.pasteStyle, val)
   pasteStyle.value = val
 }
 
-function handleUseShortUrlChange (value: string) {
+function handleUseShortUrlChange(value: string) {
   saveConfig(configPaths.settings.useShortUrl, value === $T('UPLOAD_SHORT_URL'))
   useShortUrl.value = value
 }
 
-function sortFile (type: 'name' | 'time' | 'ext' | 'check') {
+function sortFile(type: 'name' | 'time' | 'ext' | 'check') {
   switch (type) {
     case 'name':
       fileSortNameReverse.value = !fileSortNameReverse.value
@@ -976,7 +833,7 @@ function sortFile (type: 'name' | 'time' | 'ext' | 'check') {
   }
 }
 
-function handleBatchRename () {
+function handleBatchRename() {
   isShowBatchRenameDialog.value = false
   if (batchRenameMatch.value === '') {
     ElMessage.warning($T('MANAGE_BUCKET_BATCH_RENAME_ERROR_MSG'))
@@ -1002,7 +859,9 @@ function handleBatchRename () {
   for (let i = 0; i < matchedFiles.length; i++) {
     matchedFiles[i].newUrl = matchedFiles[i].newUrl.replaceAll('{auto}', (i + 1).toString())
   }
-  const duplicateFilesNum = matchedFiles.filter((item: any) => matchedFiles.filter((item2: any) => item2.newUrl === item.newUrl).length > 1).length
+  const duplicateFilesNum = matchedFiles.filter(
+    (item: any) => matchedFiles.filter((item2: any) => item2.newUrl === item.newUrl).length > 1
+  ).length
   const renamefunc = async (item: any) => {
     await $$db.updateById(item.id, {
       imgUrl: item.newUrl
@@ -1013,30 +872,38 @@ function handleBatchRename () {
     for (let i = 0; i < matchedFiles.length; i++) {
       promiseList.push(renamefunc(matchedFiles[i]))
     }
-    Promise.all(promiseList).then(() => {
-      const obj = {
-        title: $T('OPERATION_SUCCEED'),
-        body: ''
-      }
-      const myNotification = new Notification(obj.title, obj)
-      myNotification.onclick = () => {
+    Promise.all(promiseList)
+      .then(() => {
+        const obj = {
+          title: $T('OPERATION_SUCCEED'),
+          body: ''
+        }
+        const myNotification = new Notification(obj.title, obj)
+        myNotification.onclick = () => {
+          return true
+        }
+        updateGallery()
+      })
+      .catch(() => {
         return true
-      }
-      updateGallery()
-    }).catch(() => {
-      return true
-    })
+      })
   }
   if (duplicateFilesNum > 0) {
-    ElMessageBox.confirm(`${$T('MANAGE_BUCKET_BATCH_RENAME_REPEATED_MSG_A')} ${duplicateFilesNum} ${$T('MANAGE_BUCKET_BATCH_RENAME_REPEATED_MSG_B')}`, $T('MANAGE_BUCKET_BATCH_RENAME_REPEATED_MSG_C'), {
-      confirmButtonText: $T('MANAGE_BUCKET_BATCH_RENAME_REPEATED_CONFIRM'),
-      cancelButtonText: $T('MANAGE_BUCKET_BATCH_RENAME_REPEATED_CANCEL'),
-      type: 'warning'
-    }).then(() => {
-      rename()
-    }).catch(() => {
-      ElMessage.info($T('MANAGE_BUCKET_BATCH_RENAME_CANCEL'))
-    })
+    ElMessageBox.confirm(
+      `${$T('MANAGE_BUCKET_BATCH_RENAME_REPEATED_MSG_A')} ${duplicateFilesNum} ${$T('MANAGE_BUCKET_BATCH_RENAME_REPEATED_MSG_B')}`,
+      $T('MANAGE_BUCKET_BATCH_RENAME_REPEATED_MSG_C'),
+      {
+        confirmButtonText: $T('MANAGE_BUCKET_BATCH_RENAME_REPEATED_CONFIRM'),
+        cancelButtonText: $T('MANAGE_BUCKET_BATCH_RENAME_REPEATED_CANCEL'),
+        type: 'warning'
+      }
+    )
+      .then(() => {
+        rename()
+      })
+      .catch(() => {
+        ElMessage.info($T('MANAGE_BUCKET_BATCH_RENAME_CANCEL'))
+      })
   } else {
     rename()
   }
@@ -1044,22 +911,24 @@ function handleBatchRename () {
 
 onBeforeUnmount(() => {
   ipcRenderer.removeAllListeners('updateGallery')
-  ipcRenderer.removeListener(GET_PICBEDS, getPicBeds)
 })
 
 onActivated(async () => {
   pasteStyle.value = (await getConfig(configPaths.settings.pasteStyle)) || IPasteStyle.MARKDOWN
-  useShortUrl.value = (await getConfig(configPaths.settings.useShortUrl) ? $T('UPLOAD_SHORT_URL') : $T('UPLOAD_NORMAL_URL'))
+  useShortUrl.value = (await getConfig(configPaths.settings.useShortUrl))
+    ? $T('UPLOAD_SHORT_URL')
+    : $T('UPLOAD_NORMAL_URL')
   initDeleteCloud()
 })
-
 </script>
+
 <script lang="ts">
 export default {
   name: 'GalleryPage'
 }
 </script>
-<style lang='stylus'>
+
+<style lang="stylus">
 .PhotoSlider
   &__BannerIcon
     &:nth-child(1)

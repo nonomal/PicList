@@ -1,33 +1,27 @@
-// External dependencies
+import { Notification, WebContents } from 'electron'
 import fs from 'fs-extra'
 import { cloneDeep } from 'lodash'
 
-// Electron modules
-import {
-  Notification,
-  WebContents
-} from 'electron'
-
-// Custom utilities and modules
-import windowManager from 'apis/app/window/windowManager'
-import pasteTemplate from '~/main/utils/pasteTemplate'
-import db, { GalleryDB } from '~/main/apis/core/datastore'
-import { handleCopyUrl, handleUrlEncodeWithSetting } from '~/main/utils/common'
-import { T } from '~/main/i18n/index'
-import ALLApi from '@/apis/allApi'
 import picgo from '@core/picgo'
-import GuiApi from '../../gui'
-import uploader from '.'
+import db, { GalleryDB } from '@core/datastore'
+
+import uploader from 'apis/app/uploader'
+import windowManager from 'apis/app/window/windowManager'
+
+import { T } from '~/i18n/index'
+import { handleCopyUrl, handleUrlEncodeWithSetting } from '~/utils/common'
+import pasteTemplate from '~/utils/pasteTemplate'
+
 import { IPasteStyle, IWindowList } from '#/types/enum'
-import { picBedsCanbeDeleted } from '#/utils/static'
-import path from 'path'
-import SSHClient from '~/main/utils/sshClient'
-import { ISftpPlistConfig } from 'piclist'
-import { getRawData } from '~/renderer/utils/common'
-import { configPaths } from '~/universal/utils/configPaths'
+import { configPaths } from '#/utils/configPaths'
+import { changeCurrentUploader } from '~/utils/handleUploaderConfig'
+import { IPicGo } from 'piclist'
 
 const handleClipboardUploading = async (): Promise<false | ImgInfo[]> => {
-  const useBuiltinClipboard = db.get(configPaths.settings.useBuiltinClipboard) === undefined ? true : !!db.get(configPaths.settings.useBuiltinClipboard)
+  const useBuiltinClipboard =
+    db.get(configPaths.settings.useBuiltinClipboard) === undefined
+      ? true
+      : !!db.get(configPaths.settings.useBuiltinClipboard)
   const win = windowManager.getAvailableWindow()
   if (useBuiltinClipboard) {
     return await uploader.setWebContents(win!.webContents).uploadWithBuildInClipboard()
@@ -35,18 +29,42 @@ const handleClipboardUploading = async (): Promise<false | ImgInfo[]> => {
   return await uploader.setWebContents(win!.webContents).upload()
 }
 
+const handleClipboardUploadingReturnCtx = async (img?: IUploadOption, skipProcess = false): Promise<false | IPicGo> => {
+  const useBuiltinClipboard =
+    db.get(configPaths.settings.useBuiltinClipboard) === undefined
+      ? true
+      : !!db.get(configPaths.settings.useBuiltinClipboard)
+  const win = windowManager.getAvailableWindow()
+  if (useBuiltinClipboard) {
+    return await uploader.setWebContents(win!.webContents).uploadWithBuildInClipboardReturnCtx(img, skipProcess)
+  }
+  return await uploader.setWebContents(win!.webContents).uploadReturnCtx(img, skipProcess)
+}
+
 export const uploadClipboardFiles = async (): Promise<IStringKeyMap> => {
-  const img = await handleClipboardUploading()
+  const { needRestore, ctx } = await handleSecondaryUpload(undefined, undefined, 'clipboard')
+  let img: ImgInfo[] | false = false
+  if (needRestore) {
+    const res = await handleClipboardUploadingReturnCtx(ctx ? ctx.processedInput : undefined, true)
+    img = res ? res.output : false
+  } else {
+    img = await handleClipboardUploading()
+  }
   if (img !== false) {
     if (img.length > 0) {
       const trayWindow = windowManager.get(IWindowList.TRAY_WINDOW)
       const pasteStyle = db.get(configPaths.settings.pasteStyle) || IPasteStyle.MARKDOWN
-      handleCopyUrl(await (pasteTemplate(pasteStyle, img[0], db.get(configPaths.settings.customLink))))
-      const isShowResultNotification = db.get(configPaths.settings.uploadResultNotification) === undefined ? true : !!db.get(configPaths.settings.uploadResultNotification)
+      const [pastedText, shortUrl] = await pasteTemplate(pasteStyle, img[0], db.get(configPaths.settings.customLink))
+      img[0].shortUrl = shortUrl
+      handleCopyUrl(pastedText)
+      const isShowResultNotification =
+        db.get(configPaths.settings.uploadResultNotification) === undefined
+          ? true
+          : !!db.get(configPaths.settings.uploadResultNotification)
       if (isShowResultNotification) {
         const notification = new Notification({
           title: T('UPLOAD_SUCCEED'),
-          body: img[0].imgUrl!
+          body: shortUrl || img[0].imgUrl!
           // icon: img[0].imgUrl
         })
         setTimeout(() => {
@@ -83,10 +101,20 @@ export const uploadClipboardFiles = async (): Promise<IStringKeyMap> => {
   }
 }
 
-export const uploadChoosedFiles = async (webContents: WebContents, files: IFileWithPath[]): Promise<IStringKeyMap[]> => {
+export const uploadChoosedFiles = async (
+  webContents: WebContents,
+  files: IFileWithPath[]
+): Promise<IStringKeyMap[]> => {
   const input = files.map(item => item.path)
   const rawInput = cloneDeep(input)
-  const imgs = await uploader.setWebContents(webContents).upload(input)
+  const { needRestore, ctx } = await handleSecondaryUpload(webContents, input)
+  let imgs: ImgInfo[] | false = false
+  if (needRestore) {
+    const res = await uploader.setWebContents(webContents).uploadReturnCtx(ctx ? ctx.processedInput : input, true)
+    imgs = res ? res.output : false
+  } else {
+    imgs = await uploader.setWebContents(webContents).upload(input)
+  }
   const result = []
   if (imgs !== false) {
     const pasteStyle = db.get(configPaths.settings.pasteStyle) || IPasteStyle.MARKDOWN
@@ -94,18 +122,29 @@ export const uploadChoosedFiles = async (webContents: WebContents, files: IFileW
     const pasteText: string[] = []
     for (let i = 0; i < imgs.length; i++) {
       if (deleteLocalFile) {
-        fs.remove(rawInput[i]).then(() => {
-          picgo.log.info(`delete local file: ${rawInput[i]}`)
-        }).catch((err: Error) => {
-          picgo.log.error(err)
-        })
+        fs.remove(rawInput[i])
+          .then(() => {
+            picgo.log.info(`delete local file: ${rawInput[i]}`)
+          })
+          .catch((err: Error) => {
+            picgo.log.error(err)
+          })
       }
-      pasteText.push(await (pasteTemplate(pasteStyle, imgs[i], db.get(configPaths.settings.customLink))))
-      const isShowResultNotification = db.get(configPaths.settings.uploadResultNotification) === undefined ? true : !!db.get(configPaths.settings.uploadResultNotification)
+      const [pasteTextItem, shortUrl] = await pasteTemplate(
+        pasteStyle,
+        imgs[i],
+        db.get(configPaths.settings.customLink)
+      )
+      imgs[i].shortUrl = shortUrl
+      pasteText.push(pasteTextItem)
+      const isShowResultNotification =
+        db.get(configPaths.settings.uploadResultNotification) === undefined
+          ? true
+          : !!db.get(configPaths.settings.uploadResultNotification)
       if (isShowResultNotification) {
         const notification = new Notification({
           title: T('UPLOAD_SUCCEED'),
-          body: imgs[i].imgUrl!
+          body: shortUrl || imgs[i].imgUrl!
           // icon: files[i].path
         })
         setTimeout(() => {
@@ -130,61 +169,70 @@ export const uploadChoosedFiles = async (webContents: WebContents, files: IFileW
   }
 }
 
-async function deleteSFTPFile (config: ISftpPlistConfig, fileName: string) {
-  try {
-    const client = SSHClient.instance
-    await client.connect(config)
-    const uploadPath = `/${(config.uploadPath || '')}/`.replace(/\/+/g, '/')
-    const remote = path.join(uploadPath, fileName)
-    const deleteResult = await client.deleteFileSFTP(config, remote)
-    client.close()
-    return deleteResult
-  } catch (err: any) {
-    console.error(err)
-    return false
-  }
-}
-
-export const deleteChoosedFiles = async (list: ImgInfo[]): Promise<boolean[]> => {
-  const result = []
-  for (const item of list) {
-    if (item.id) {
-      try {
-        const dbStore = GalleryDB.getInstance()
-        const file = await dbStore.getById(item.id)
-        await dbStore.removeById(item.id)
-        if (await picgo.getConfig(configPaths.settings.deleteCloudFile)) {
-          if (item.type !== undefined && picBedsCanbeDeleted.includes(item.type)) {
-            const noteFunc = (value: boolean) => {
-              const notification = new Notification({
-                title: T('MANAGE_BUCKET_BATCH_DELETE_ERROR_MSG_MSG2'),
-                body: T(value ? 'GALLERY_SYNC_DELETE_NOTICE_SUCCEED' : 'GALLERY_SYNC_DELETE_NOTICE_FAILED')
-              })
-              notification.show()
-            }
-            if (item.type === 'sftpplist') {
-              const { fileName, config } = item
-              setTimeout(() => {
-                deleteSFTPFile(getRawData(config), fileName || '').then(noteFunc)
-              }, 0)
-            } else {
-              setTimeout(() => {
-                ALLApi.delete(item).then(noteFunc)
-              }, 0)
-            }
+export const handleSecondaryUpload = async (
+  webContents?: WebContents,
+  input?: string[],
+  uploadType: 'clipboard' | 'file' | 'tray' = 'file'
+): Promise<{ needRestore: boolean; ctx: IPicGo | false }> => {
+  const enableSecondUploader = db.get(configPaths.settings.enableSecondUploader) || false
+  let currentPicBedType = ''
+  let currentPicBedConfig = {} as IStringKeyMap
+  let currentPicBedConfigId = ''
+  let needRestore = false
+  let ctx: IPicGo | false = false
+  if (enableSecondUploader) {
+    const secondUploader = db.get(configPaths.picBed.secondUploader)
+    const secondUploaderConfig = db.get(configPaths.picBed.secondUploaderConfig)
+    const secondUploaderId = db.get(configPaths.picBed.secondUploaderId)
+    const currentPicBed = db.get('picBed') || ({} as IStringKeyMap)
+    currentPicBedType = currentPicBed.uploader || currentPicBed.current || 'smms'
+    currentPicBedConfig = currentPicBed[currentPicBedType] || ({} as IStringKeyMap)
+    currentPicBedConfigId = currentPicBedConfig._id
+    if (
+      secondUploader === currentPicBedType &&
+      secondUploaderConfig._configName === currentPicBedConfig._configName &&
+      secondUploaderId === currentPicBedConfigId
+    ) {
+      picgo.log.info('second uploader is the same as current uploader')
+    } else {
+      needRestore = true
+      let secondImgs: ImgInfo[] | false = false
+      changeCurrentUploader(secondUploader, secondUploaderConfig, secondUploaderId)
+      if (uploadType === 'clipboard') {
+        ctx = await handleClipboardUploadingReturnCtx(undefined)
+      } else {
+        ctx = await uploader.setWebContents(webContents!).uploadReturnCtx(input)
+      }
+      secondImgs = ctx ? ctx.output : false
+      if (secondImgs !== false) {
+        const trayWindow = windowManager.get(IWindowList.TRAY_WINDOW)
+        if (uploadType === 'clipboard') {
+          if (secondImgs.length > 0) {
+            await GalleryDB.getInstance().insert(secondImgs[0])
+            trayWindow?.webContents?.send('clipboardFiles', [])
+            trayWindow?.webContents?.send('uploadFiles', secondImgs)
+          }
+        } else {
+          for (let i = 0; i < secondImgs.length; i++) {
+            await GalleryDB.getInstance().insert(secondImgs[i])
+          }
+          if (uploadType === 'tray') {
+            trayWindow?.webContents?.send('dragFiles', secondImgs)
+          } else {
+            trayWindow?.webContents?.send('uploadFiles', secondImgs)
           }
         }
-        setTimeout(() => {
-          picgo.emit('remove', [file], GuiApi.getInstance())
-        }, 500)
-        result.push(true)
-      } catch (e) {
-        result.push(false)
+        if (windowManager.has(IWindowList.SETTING_WINDOW) && uploadType !== 'tray') {
+          windowManager.get(IWindowList.SETTING_WINDOW)!.webContents?.send('updateGallery')
+        }
       }
     }
   }
-  if (windowManager.has(IWindowList.SETTING_WINDOW)) {
-    windowManager.get(IWindowList.SETTING_WINDOW)!.webContents?.send('updateGallery')
+  if (needRestore) {
+    changeCurrentUploader(currentPicBedType, currentPicBedConfig, currentPicBedConfigId)
   }
-  return result
+  return {
+    needRestore,
+    ctx
+  }
 }

@@ -1,51 +1,50 @@
-import { clipboard, nativeImage } from 'electron'
+import crypto from 'crypto'
+import { clipboard } from 'electron'
 import { EventEmitter } from 'events'
 
-class ClipboardWatcher extends EventEmitter {
-  lastImage: Electron.NativeImage | null
-  timer: NodeJS.Timeout | null
+import logger from '@core/picgo/logger'
 
-  constructor () {
+class ClipboardWatcher extends EventEmitter {
+  timer: NodeJS.Timeout | null
+  lastImageHash: string | null
+
+  constructor() {
     super()
-    this.lastImage = null
+    this.lastImageHash = null
     this.timer = null
   }
 
-  startListening (watchDelay = 500) {
-    this.stopListening()
-
-    const image = clipboard.readImage()
-    if (!image.isEmpty()) {
-      const dataUrl = image.toDataURL()
-      this.lastImage = nativeImage.createFromDataURL(dataUrl)
-    }
+  startListening(watchDelay = 500) {
+    this.stopListening(false)
 
     this.timer = setInterval(() => {
       const image = clipboard.readImage()
-      if (image.isEmpty()) {
+      if (image.isEmpty()) return
+
+      const currentImageHash = this.getImageHash(image)
+      if (this.lastImageHash === null || this.lastImageHash === currentImageHash) {
+        this.lastImageHash = currentImageHash
         return
       }
 
-      const dataUrl = image.toDataURL()
-      const currentImage = nativeImage.createFromDataURL(dataUrl)
-
-      if (this.lastImage) {
-        const lastDataUrl = this.lastImage.toDataURL()
-        if (lastDataUrl === dataUrl) {
-          return
-        }
-      }
-
-      this.lastImage = currentImage
-      this.emit('change', currentImage)
+      this.lastImageHash = currentImageHash
+      this.emit('change')
     }, watchDelay)
+    logger.info('Start to watch clipboard')
   }
 
-  stopListening () {
+  stopListening(isLog = true) {
     if (this.timer) {
       clearInterval(this.timer)
       this.timer = null
+      this.lastImageHash = null
     }
+    isLog && logger.info('Stop to watch clipboard')
+  }
+
+  getImageHash(image: Electron.NativeImage): string {
+    const buffer = image.toBitmap()
+    return crypto.createHash('md5').update(buffer).digest('hex')
   }
 }
 

@@ -2,72 +2,32 @@
   <div id="plugin-view">
     <div class="view-title">
       {{ $T('PLUGIN_SETTINGS') }} -
-      <el-tooltip
-        :content="pluginListToolTip"
-        placement="right"
-        :persistent="false"
-        teleported
-      >
-        <el-icon
-          class="el-icon-goods"
-          @click="goAwesomeList"
-        >
+      <el-tooltip :content="pluginListToolTip" placement="right" :persistent="false" teleported>
+        <el-icon class="el-icon-goods" @click="goAwesomeList">
           <Goods />
         </el-icon>
       </el-tooltip>
-      <el-tooltip
-        :content="updateAllToolTip"
-        placement="left"
-        :persistent="false"
-        teleported
-      >
-        <el-icon
-          class="el-icon-update"
-          @click="handleUpdateAllPlugin"
-        >
+      <el-tooltip :content="updateAllToolTip" placement="left" :persistent="false" teleported>
+        <el-icon class="el-icon-update" @click="handleUpdateAllPlugin">
           <Refresh />
         </el-icon>
       </el-tooltip>
-      <el-tooltip
-        :content="importLocalPluginToolTip"
-        placement="left"
-      >
-        <el-icon
-          class="el-icon-download"
-          :persistent="false"
-          teleported
-          @click="handleImportLocalPlugin"
-        >
+      <el-tooltip :content="importLocalPluginToolTip" placement="left">
+        <el-icon class="el-icon-download" :persistent="false" teleported @click="handleImportLocalPlugin">
           <Download />
         </el-icon>
       </el-tooltip>
     </div>
-    <el-row
-      class="handle-bar"
-      :class="{ 'cut-width': pluginList.length > 6 }"
-    >
-      <el-input
-        v-model="searchText"
-        :placeholder="$T('PLUGIN_SEARCH_PLACEHOLDER')"
-        size="small"
-      >
+    <el-row class="handle-bar" :class="{ 'cut-width': pluginList.length > 6 }">
+      <el-input v-model="searchText" :placeholder="$T('PLUGIN_SEARCH_PLACEHOLDER')" size="small">
         <template #suffix>
-          <el-icon
-            class="el-input__icon"
-            style="cursor: pointer;"
-            @click="cleanSearch"
-          >
+          <el-icon class="el-input__icon" style="cursor: pointer" @click="cleanSearch">
             <close />
           </el-icon>
         </template>
       </el-input>
     </el-row>
-    <el-row
-      id="pluginList"
-      v-loading="loading"
-      :gutter="10"
-      class="plugin-list"
-    >
+    <el-row id="pluginList" v-loading="loading" :gutter="10" class="plugin-list">
       <el-col
         v-for="item in pluginList"
         :key="item.fullName"
@@ -78,30 +38,11 @@
         :lg="pluginList.length === 1 ? 24 : 12"
         :xl="pluginList.length === 1 ? 24 : 12"
       >
-        <div
-          class="plugin-item"
-          :class="{ 'darwin': os === 'darwin' }"
-        >
-          <div
-            v-if="!item.gui"
-            class="cli-only-badge"
-            title="CLI only"
-          >
-            CLI
-          </div>
-          <img
-            class="plugin-item__logo"
-            :src="item.logo"
-            :onerror="defaultLogo"
-          >
-          <div
-            class="plugin-item__content"
-            :class="{ disabled: !item.enabled }"
-          >
-            <div
-              class="plugin-item__name"
-              @click="openHomepage(item.homepage)"
-            >
+        <div class="plugin-item" :class="{ darwin: osGlobal === 'darwin' }">
+          <div v-if="!item.gui" class="cli-only-badge" title="CLI only">CLI</div>
+          <img class="plugin-item__logo" :src="item.logo" :onerror="defaultLogo" />
+          <div class="plugin-item__content" :class="{ disabled: !item.enabled }">
+            <div class="plugin-item__name" @click="openHomepage(item.homepage)">
               {{ item.name }} <small>{{ ' ' + item.version }}</small> &nbsp;
               <!-- 升级提示 -->
               <el-tag
@@ -114,10 +55,7 @@
                 new
               </el-tag>
             </div>
-            <div
-              class="plugin-item__desc"
-              :title="item.description"
-            >
+            <div class="plugin-item__desc" :title="item.description">
               {{ item.description }}
             </div>
             <div class="plugin-item__info-bar">
@@ -127,47 +65,26 @@
               <span class="plugin-item__config">
                 <template v-if="searchText">
                   <template v-if="!item.hasInstall">
-                    <span
-                      v-if="!item.ing"
-                      class="config-button install"
-                      @click="installPlugin(item)"
-                    >
+                    <span v-if="!item.ing" class="config-button install" @click="installPlugin(item)">
                       {{ $T('PLUGIN_INSTALL') }}
                     </span>
-                    <span
-                      v-else-if="item.ing"
-                      class="config-button ing"
-                    >
+                    <span v-else-if="item.ing" class="config-button ing">
                       {{ $T('PLUGIN_INSTALLING') }}
                     </span>
                   </template>
-                  <span
-                    v-else
-                    class="config-button ing"
-                  >
+                  <span v-else class="config-button ing">
                     {{ $T('PLUGIN_INSTALLED') }}
                   </span>
                 </template>
                 <template v-else>
-                  <span
-                    v-if="item.ing"
-                    class="config-button ing"
-                  >
+                  <span v-if="item.ing" class="config-button ing">
                     {{ $T('PLUGIN_DOING_SOMETHING') }}
                   </span>
                   <template v-else>
-                    <el-icon
-                      v-if="item.enabled"
-                      class="el-icon-setting"
-                      @click="buildContextMenu(item)"
-                    >
+                    <el-icon v-if="item.enabled" class="el-icon-setting" @click="buildContextMenu(item)">
                       <Tools />
                     </el-icon>
-                    <el-icon
-                      v-else
-                      class="el-icon-remove-outline"
-                      @click="buildContextMenu(item)"
-                    >
+                    <el-icon v-else class="el-icon-remove-outline" @click="buildContextMenu(item)">
                       <Remove />
                     </el-icon>
                   </template>
@@ -178,103 +95,58 @@
         </div>
       </el-col>
     </el-row>
-    <el-row
-      v-show="needReload"
-      class="reload-mask"
-      :class="{ 'cut-width': pluginList.length > 6 }"
-      justify="center"
-    >
-      <el-button
-        type="primary"
-        size="small"
-        round
-        @click="reloadApp"
-      >
+    <el-row v-show="needReload" class="reload-mask" :class="{ 'cut-width': pluginList.length > 6 }" justify="center">
+      <el-button type="primary" size="small" round @click="reloadApp">
         {{ $T('TIPS_NEED_RELOAD') }}
       </el-button>
     </el-row>
     <el-dialog
       v-model="dialogVisible"
       :modal-append-to-body="false"
-      :title="$T('CONFIG_THING', {
-        c: configName
-      })"
+      :title="
+        $T('CONFIG_THING', {
+          c: configName
+        })
+      "
       width="70%"
       append-to-body
     >
-      <config-form
-        :id="configName"
-        ref="$configForm"
-        :config="config"
-        :type="currentType"
-        color-mode="white"
-      />
+      <config-form :id="configName" ref="$configForm" :config="config" :type="currentType" color-mode="white" />
       <template #footer>
-        <el-button
-          round
-          @click="dialogVisible = false"
-        >
+        <el-button round @click="dialogVisible = false">
           {{ $T('CANCEL') }}
         </el-button>
-        <el-button
-          type="primary"
-          round
-          @click="handleConfirmConfig"
-        >
+        <el-button type="primary" round @click="handleConfirmConfig">
           {{ $T('CONFIRM') }}
         </el-button>
       </template>
     </el-dialog>
   </div>
 </template>
+
 <script lang="ts" setup>
-// Element Plus 图标
-import { Close, Download, Refresh, Goods, Remove, Tools } from '@element-plus/icons-vue'
-
-// 国际化函数
-import { T as $T } from '@/i18n/index'
-
-// 组件
-import ConfigForm from '@/components/ConfigFormForPlugin.vue'
-
-// Lodash 函数节流
+import axios from 'axios'
+import { ipcRenderer, IpcRendererEvent } from 'electron'
+import { ElMessageBox } from 'element-plus'
 import { debounce, DebouncedFunc } from 'lodash'
+import { Close, Download, Refresh, Goods, Remove, Tools } from '@element-plus/icons-vue'
+import { computed, ref, onBeforeMount, onBeforeUnmount, watch, onMounted, reactive, toRaw } from 'vue'
 
-// Electron 相关
+import ConfigForm from '@/components/ConfigFormForPlugin.vue'
+import { T as $T } from '@/i18n/index'
+import { sendRPC } from '@/utils/common'
+import { getConfig, saveConfig } from '@/utils/dataSender'
+import { osGlobal, updatePicBedGlobal } from '@/utils/global'
+
 import {
-  ipcRenderer,
-  IpcRendererEvent
-} from 'electron'
-
-// 工具函数
-import { handleStreamlinePluginName } from '~/universal/utils/common'
-
-// 事件常量
-import {
-  OPEN_URL,
   PICGO_CONFIG_PLUGIN,
   PICGO_HANDLE_PLUGIN_ING,
   PICGO_TOGGLE_PLUGIN,
-  SHOW_PLUGIN_PAGE_MENU,
-  GET_PICBEDS,
   PICGO_HANDLE_PLUGIN_DONE
 } from '#/events/constants'
-
-// Vue 相关
-import { computed, ref, onBeforeMount, onBeforeUnmount, watch, onMounted, reactive, toRaw } from 'vue'
-
-// 数据发送工具函数
-import { getConfig, saveConfig, sendRPC, sendToMain } from '@/utils/dataSender'
-
-// Element Plus 消息框组件
-import { ElMessageBox } from 'element-plus'
-
-// Axios
-import axios from 'axios'
-
-// 枚举类型声明
-import { IRPCActionType } from '~/universal/types/enum'
-import { configPaths } from '~/universal/utils/configPaths'
+import { IRPCActionType } from '#/types/enum'
+import { handleStreamlinePluginName } from '#/utils/common'
+import { configPaths } from '#/utils/configPaths'
 
 const $confirm = ElMessageBox.confirm
 const searchText = ref('')
@@ -290,8 +162,6 @@ const latestVersionMap = reactive<{ [key: string]: string }>({})
 const pluginListToolTip = $T('PLUGIN_LIST')
 const importLocalPluginToolTip = $T('PLUGIN_IMPORT_LOCAL')
 const updateAllToolTip = $T('PLUGIN_UPDATE_ALL')
-// const id = ref('')
-const os = ref('')
 const defaultLogo = ref(`this.src="file://${__static.replace(/\\/g, '/')}/roundLogo.png"`)
 const $configForm = ref<InstanceType<typeof ConfigForm> | null>(null)
 const npmSearchText = computed(() => {
@@ -315,15 +185,15 @@ watch(npmSearchText, (val: string) => {
 
 watch(dialogVisible, (val: boolean) => {
   if (val) {
-    // @ts-ignore
+    // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
     document.querySelector('.main-content.el-row').style.zIndex = 101
   } else {
-    // @ts-ignore
+    // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
     document.querySelector('.main-content.el-row').style.zIndex = 10
   }
 })
 
-async function getLatestVersionOfPlugIn (pluginName: string) {
+async function getLatestVersionOfPlugIn(pluginName: string) {
   try {
     const res = await axios.get(`https://registry.npmjs.com/${pluginName}`)
     latestVersionMap[pluginName] = res.data['dist-tags'].latest
@@ -333,19 +203,18 @@ async function getLatestVersionOfPlugIn (pluginName: string) {
 }
 
 onBeforeMount(async () => {
-  os.value = process.platform
   ipcRenderer.on('hideLoading', () => {
     loading.value = false
   })
-  ipcRenderer.on(PICGO_HANDLE_PLUGIN_DONE, (evt: IpcRendererEvent, fullName: string) => {
+  ipcRenderer.on(PICGO_HANDLE_PLUGIN_DONE, (_: IpcRendererEvent, fullName: string) => {
     pluginList.value.forEach(item => {
-      if (item.fullName === fullName || (item.name === fullName)) {
+      if (item.fullName === fullName || item.name === fullName) {
         item.ing = false
       }
     })
     loading.value = false
   })
-  ipcRenderer.on('pluginList', (evt: IpcRendererEvent, list: IPicGoPlugin[]) => {
+  ipcRenderer.on('pluginList', (_: IpcRendererEvent, list: IPicGoPlugin[]) => {
     pluginList.value = list
     pluginNameList.value = list.map(item => item.fullName)
     for (const item of pluginList.value) {
@@ -353,78 +222,91 @@ onBeforeMount(async () => {
     }
     loading.value = false
   })
-  ipcRenderer.on('installPlugin', (evt: IpcRendererEvent, { success, body }: {
-    success: boolean,
-    body: string
-  }) => {
-    loading.value = false
-    pluginList.value.forEach(item => {
-      if (item.fullName === body) {
-        item.ing = false
-        item.hasInstall = success
+  ipcRenderer.on(
+    'installPlugin',
+    (
+      _: IpcRendererEvent,
+      {
+        success,
+        body
+      }: {
+        success: boolean
+        body: string
       }
-    })
-  })
-  ipcRenderer.on('updateSuccess', (evt: IpcRendererEvent, plugin: string) => {
+    ) => {
+      loading.value = false
+      pluginList.value.forEach(item => {
+        if (item.fullName === body) {
+          item.ing = false
+          item.hasInstall = success
+        }
+      })
+    }
+  )
+  ipcRenderer.on('updateSuccess', (_: IpcRendererEvent, plugin: string) => {
     loading.value = false
     pluginList.value.forEach(item => {
       if (item.fullName === plugin) {
         item.ing = false
         item.hasInstall = true
       }
-      getPicBeds()
+      updatePicBedGlobal()
     })
     handleReload()
     getPluginList()
   })
-  ipcRenderer.on('uninstallSuccess', (evt: IpcRendererEvent, plugin: string) => {
+  ipcRenderer.on('uninstallSuccess', (_: IpcRendererEvent, plugin: string) => {
     loading.value = false
     pluginList.value = pluginList.value.filter(item => {
-      if (item.fullName === plugin) { // restore Uploader & Transformer after uninstalling
+      if (item.fullName === plugin) {
+        // restore Uploader & Transformer after uninstalling
         if (item.config.transformer.name) {
           handleRestoreState('transformer', item.config.transformer.name)
         }
         if (item.config.uploader.name) {
           handleRestoreState('uploader', item.config.uploader.name)
         }
-        getPicBeds()
+        updatePicBedGlobal()
       }
       return item.fullName !== plugin
     })
     pluginNameList.value = pluginNameList.value.filter(item => item !== plugin)
   })
-  ipcRenderer.on(PICGO_CONFIG_PLUGIN, (evt: IpcRendererEvent, _currentType: 'plugin' | 'transformer' | 'uploader', _configName: string, _config: any) => {
-    currentType.value = _currentType
-    configName.value = _configName
-    config.value = _config
-    dialogVisible.value = true
-  })
-  ipcRenderer.on(PICGO_HANDLE_PLUGIN_ING, (evt: IpcRendererEvent, fullName: string) => {
+  ipcRenderer.on(
+    PICGO_CONFIG_PLUGIN,
+    (_: IpcRendererEvent, _currentType: 'plugin' | 'transformer' | 'uploader', _configName: string, _config: any) => {
+      currentType.value = _currentType
+      configName.value = _configName
+      config.value = _config
+      dialogVisible.value = true
+    }
+  )
+  ipcRenderer.on(PICGO_HANDLE_PLUGIN_ING, (_: IpcRendererEvent, fullName: string) => {
     pluginList.value.forEach(item => {
-      if (item.fullName === fullName || (item.name === fullName)) {
+      if (item.fullName === fullName || item.name === fullName) {
         item.ing = true
       }
     })
     loading.value = true
   })
-  ipcRenderer.on(PICGO_TOGGLE_PLUGIN, (evt: IpcRendererEvent, fullName: string, enabled: boolean) => {
+  ipcRenderer.on(PICGO_TOGGLE_PLUGIN, (_: IpcRendererEvent, fullName: string, enabled: boolean) => {
     const plugin = pluginList.value.find(item => item.fullName === fullName)
     if (plugin) {
       plugin.enabled = enabled
-      getPicBeds()
+      updatePicBedGlobal()
       needReload.value = true
     }
   })
   getPluginList()
   getSearchResult = debounce(_getSearchResult, 50)
-  needReload.value = await getConfig<boolean>(configPaths.needReload) || false
+  needReload.value = (await getConfig<boolean>(configPaths.needReload)) || false
 })
 
-async function buildContextMenu (plugin: IPicGoPlugin) {
-  sendToMain(SHOW_PLUGIN_PAGE_MENU, plugin)
+async function buildContextMenu(plugin: IPicGoPlugin) {
+  sendRPC(IRPCActionType.SHOW_PLUGIN_PAGE_MENU, plugin)
 }
 
-function handleResize () {
+function handleResize() {
   const myDiv = document.getElementById('pluginList') as HTMLElement
   const windowHeight = window.innerHeight
   const newHeight = windowHeight * 0.75
@@ -435,57 +317,35 @@ onMounted(() => {
   window.addEventListener('resize', handleResize)
 })
 
-function getPluginList () {
-  sendToMain('getPluginList')
+function getPluginList() {
+  sendRPC(IRPCActionType.PLUGIN_GET_LIST)
 }
 
-function getPicBeds () {
-  sendToMain(GET_PICBEDS)
-}
-
-function installPlugin (item: IPicGoPlugin) {
+function installPlugin(item: IPicGoPlugin) {
   if (!item.gui) {
     $confirm($T('TIPS_PLUGIN_NOT_GUI_IMPLEMENT'), $T('TIPS_NOTICE'), {
       confirmButtonText: $T('CONFIRM'),
       cancelButtonText: $T('CANCEL'),
       type: 'warning'
-    }).then(() => {
-      item.ing = true
-      sendToMain('installPlugin', item.fullName)
-    }).catch(() => {
-      console.log('Install canceled')
     })
+      .then(() => {
+        item.ing = true
+        sendRPC(IRPCActionType.PLUGIN_INSTALL, item.fullName)
+      })
+      .catch(() => {
+        console.log('Install canceled')
+      })
   } else {
     item.ing = true
-    sendToMain('installPlugin', item.fullName)
+    sendRPC(IRPCActionType.PLUGIN_INSTALL, item.fullName)
   }
 }
 
-// function uninstallPlugin (val: string) {
-//   pluginList.value.forEach(item => {
-//     if (item.name === val) {
-//       item.ing = true
-//     }
-//   })
-//   loading.value = true
-//   sendToMain('uninstallPlugin', val)
-// }
-
-// function updatePlugin (val: string) {
-//   pluginList.value.forEach(item => {
-//     if (item.fullName === val) {
-//       item.ing = true
-//     }
-//   })
-//   loading.value = true
-//   sendToMain('updatePlugin', val)
-// }
-
-function reloadApp () {
+function reloadApp() {
   sendRPC(IRPCActionType.RELOAD_APP)
 }
 
-async function handleReload () {
+async function handleReload() {
   saveConfig({
     needReload: true
   })
@@ -498,12 +358,12 @@ async function handleReload () {
   }
 }
 
-function cleanSearch () {
+function cleanSearch() {
   searchText.value = ''
 }
 
-async function handleConfirmConfig () {
-  const result = (await $configForm.value?.validate() || false)
+async function handleConfirmConfig() {
+  const result = (await $configForm.value?.validate()) || false
   if (result !== false) {
     switch (currentType.value) {
       case 'plugin':
@@ -533,12 +393,12 @@ async function handleConfirmConfig () {
   }
 }
 
-function _getSearchResult (val: string) {
-  // this.$http.get(`https://api.npms.io/v2/search?q=${val}`)
-  axios.get(`https://registry.npmjs.com/-/v1/search?text=${val}`)
+function _getSearchResult(val: string) {
+  axios
+    .get(`https://registry.npmjs.com/-/v1/search?text=${val}`)
     .then((res: INPMSearchResult) => {
       pluginList.value = res.data.objects
-        .filter((item:INPMSearchResultObject) => {
+        .filter((item: INPMSearchResultObject) => {
           return item.package.name.includes('picgo-plugin-')
         })
         .map((item: INPMSearchResultObject) => {
@@ -552,31 +412,32 @@ function _getSearchResult (val: string) {
     })
 }
 
-function handleSearchResult (item: INPMSearchResultObject) {
-  const name = handleStreamlinePluginName(item.package.name)
+function handleSearchResult(item: INPMSearchResultObject) {
+  const pkg = item.package
+  const name = handleStreamlinePluginName(pkg.name)
   let gui = false
-  if (item.package.keywords && item.package.keywords.length > 0) {
-    if (item.package.keywords.includes('picgo-gui-plugin')) {
+  if (pkg.keywords && pkg.keywords.length > 0) {
+    if (pkg.keywords.includes('picgo-gui-plugin')) {
       gui = true
     }
   }
   return {
     name,
-    fullName: item.package.name,
-    author: item.package.author.name,
-    description: item.package.description,
-    logo: `https://cdn.jsdelivr.net/npm/${item.package.name}/logo.png`,
+    fullName: pkg.name,
+    author: pkg.author?.name || pkg.publisher?.username || 'unknown',
+    description: pkg.description,
+    logo: `https://cdn.jsdelivr.net/npm/${pkg.name}/logo.png`,
     config: {},
-    homepage: item.package.links ? item.package.links.homepage : '',
-    hasInstall: pluginNameList.value.some(plugin => plugin === item.package.name),
-    version: item.package.version,
+    homepage: pkg.links ? pkg.links.homepage : '',
+    hasInstall: pluginNameList.value.some(plugin => plugin === pkg.name),
+    version: pkg.version,
     gui,
     ing: false // installing or uninstalling
   }
 }
 
 // restore Uploader & Transformer
-async function handleRestoreState (item: string, name: string) {
+async function handleRestoreState(item: string, name: string) {
   if (item === 'uploader') {
     const current = await getConfig(configPaths.picBed.current)
     if (current === name) {
@@ -596,23 +457,23 @@ async function handleRestoreState (item: string, name: string) {
   }
 }
 
-function openHomepage (url: string) {
+function openHomepage(url: string) {
   if (url) {
-    sendToMain(OPEN_URL, url)
+    sendRPC(IRPCActionType.OPEN_URL, url)
   }
 }
 
-function goAwesomeList () {
-  sendToMain(OPEN_URL, 'https://github.com/PicGo/Awesome-PicGo')
+function goAwesomeList() {
+  sendRPC(IRPCActionType.OPEN_URL, 'https://github.com/PicGo/Awesome-PicGo')
 }
 
-function handleImportLocalPlugin () {
-  sendToMain('importLocalPlugin')
+function handleImportLocalPlugin() {
+  sendRPC(IRPCActionType.PLUGIN_IMPORT_LOCAL)
   loading.value = true
 }
 
-function handleUpdateAllPlugin () {
-  sendToMain('updateAllPlugin', toRaw(pluginNameList.value))
+function handleUpdateAllPlugin() {
+  sendRPC(IRPCActionType.PLUGIN_UPDATE_ALL, toRaw(pluginNameList.value))
 }
 
 onBeforeUnmount(() => {
@@ -624,14 +485,13 @@ onBeforeUnmount(() => {
   ipcRenderer.removeAllListeners('hideLoading')
   ipcRenderer.removeAllListeners(PICGO_HANDLE_PLUGIN_DONE)
 })
-
 </script>
 <script lang="ts">
 export default {
   name: 'PluginPage'
 }
 </script>
-<style lang='stylus'>
+<style lang="stylus">
 $darwinBg = #172426
 #plugin-view
   position absolute

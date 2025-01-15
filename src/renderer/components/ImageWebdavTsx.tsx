@@ -1,9 +1,11 @@
-import { defineComponent, ref, onMounted, watch, computed } from 'vue'
-import { getFileIconPath } from '@/manage/utils/common'
-import { Loading } from '@element-plus/icons-vue'
-import { getAuthHeader } from '@/manage/utils/digestAuth'
-import { formatEndpoint } from '~/main/manage/utils/common'
 import { ElImage, ElIcon } from 'element-plus'
+import { defineComponent, ref, onMounted, watch, computed } from 'vue'
+import { Loading } from '@element-plus/icons-vue'
+
+import { getFileIconPath } from '@/manage/utils/common'
+import { getAuthHeader } from '@/manage/utils/digestAuth'
+
+import { formatEndpoint } from '#/utils/common'
 
 export default defineComponent({
   props: {
@@ -25,18 +27,20 @@ export default defineComponent({
     }
   },
 
-  setup (props) {
+  setup(props) {
     const base64Url = ref('')
     const success = ref(false)
 
     const imageSource = computed(() => {
-      return (props.isShowThumbnail && props.item.isImage && success.value)
+      return props.isShowThumbnail && props.item.isImage && success.value
         ? base64Url.value
         : require(`../manage/pages/assets/icons/${getFileIconPath(props.item.fileName ?? '')}`)
     })
-    const iconPath = computed(() => require(`../manage/pages/assets/icons/${getFileIconPath(props.item.fileName ?? '')}`))
+    const iconPath = computed(() =>
+      require(`../manage/pages/assets/icons/${getFileIconPath(props.item.fileName ?? '')}`)
+    )
 
-    async function getheaderOfWebdav (key: string) {
+    async function getWebdavHeader(key: string) {
       let headers = {} as any
       if (props.config.authType === 'digest') {
         const authHeader = await getAuthHeader(
@@ -59,7 +63,7 @@ export default defineComponent({
 
     const fetchImage = async () => {
       try {
-        const headers = await getheaderOfWebdav(props.item.key)
+        const headers = await getWebdavHeader(props.item.key)
         const res = await fetch(props.url, { method: 'GET', headers })
         if (res.status >= 200 && res.status < 300) {
           const blob = await res.blob()
@@ -77,24 +81,14 @@ export default defineComponent({
     onMounted(fetchImage)
 
     return () => (
-      <ElImage
-        src={imageSource.value}
-        fit="contain"
-        style="height: 100px;width: 100%;margin: 0 auto;"
-      >
+      <ElImage src={imageSource.value} fit='contain' style='height: 100px;width: 100%;margin: 0 auto;'>
         {{
           placeholder: () => (
             <ElIcon>
               <Loading />
             </ElIcon>
           ),
-          error: () => (
-            <ElImage
-              src={iconPath.value}
-              fit="contain"
-              style="height: 100px;width: 100%;margin: 0 auto;"
-            />
-          )
+          error: () => <ElImage src={iconPath.value} fit='contain' style='height: 100px;width: 100%;margin: 0 auto;' />
         }}
       </ElImage>
     )

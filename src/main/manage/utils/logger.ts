@@ -2,12 +2,13 @@ import chalk from 'chalk'
 import dayjs from 'dayjs'
 import fs from 'fs-extra'
 import path from 'path'
-import util from 'util'
-import { ILogType } from '#/types/enum'
 import { ILogColor, ILogger } from 'piclist/dist/types'
-import { ManageApiType, Undefinable } from '~/universal/types/manage'
+import util from 'util'
+
+import { ILogType } from '#/types/enum'
+import { IManageApiType, Undefinable } from '#/types/manage'
 import { enforceNumber, isDev } from '#/utils/common'
-import { configPaths } from '~/universal/utils/configPaths'
+import { configPaths } from '#/utils/configPaths'
 
 export class ManageLogger implements ILogger {
   readonly #level = {
@@ -17,18 +18,16 @@ export class ManageLogger implements ILogger {
     [ILogType.error]: 'red'
   }
 
-  readonly #ctx: ManageApiType
+  readonly #ctx: IManageApiType
   #logLevel!: string
   #logPath!: string
 
-  constructor (ctx: ManageApiType) {
+  constructor(ctx: IManageApiType) {
     this.#ctx = ctx
   }
 
-  #handleLog (type: ILogType, ...msg: ILogArgvTypeWithError[]): void {
-    const logHeader = chalk[this.#level[type] as ILogColor](
-      `[PicList ${type.toUpperCase()}]`
-    )
+  #handleLog(type: ILogType, ...msg: ILogArgvTypeWithError[]): void {
+    const logHeader = chalk[this.#level[type] as ILogColor](`[PicList ${type.toUpperCase()}]`)
     console.log(logHeader, ...msg)
     this.#logLevel = this.#ctx.getConfig(configPaths.settings.logLevel)
     this.#logPath =
@@ -52,7 +51,7 @@ export class ManageLogger implements ILogger {
     }, 0)
   }
 
-  #checkLogFileIsLarge (logPath: string): {
+  #checkLogFileIsLarge(logPath: string): {
     isLarge: boolean
     logFileSize?: number
     logFileSizeLimit?: number
@@ -60,11 +59,7 @@ export class ManageLogger implements ILogger {
     if (fs.existsSync(logPath)) {
       const logFileSize = fs.statSync(logPath).size
       const logFileSizeLimit =
-        enforceNumber(
-          this.#ctx.getConfig<Undefinable<number>>(
-            configPaths.settings.logFileSizeLimit
-          ) || 10
-        ) *
+        enforceNumber(this.#ctx.getConfig<Undefinable<number>>(configPaths.settings.logFileSizeLimit) || 10) *
         1024 *
         1024
       return {
@@ -79,18 +74,14 @@ export class ManageLogger implements ILogger {
     }
   }
 
-  #recreateLogFile (logPath: string): void {
+  #recreateLogFile(logPath: string): void {
     if (fs.existsSync(logPath)) {
       fs.unlinkSync(logPath)
       fs.createFileSync(logPath)
     }
   }
 
-  #handleWriteLog (
-    logPath: string,
-    type: string,
-    ...msg: ILogArgvTypeWithError[]
-  ): void {
+  #handleWriteLog(logPath: string, type: string, ...msg: ILogArgvTypeWithError[]): void {
     try {
       if (this.#checkLogLevel(type, this.#logLevel)) {
         let log = `${dayjs().format('YYYY-MM-DD HH:mm:ss')} [PicList ${type.toUpperCase()}] `
@@ -105,7 +96,7 @@ export class ManageLogger implements ILogger {
     }
   }
 
-  #formatLogItem (item: ILogArgvTypeWithError, type: string): string {
+  #formatLogItem(item: ILogArgvTypeWithError, type: string): string {
     let result = ''
     if (item instanceof Error && type === 'error') {
       result += `\n------Error Stack Begin------\n${util.format(item?.stack)}\n-------Error Stack End------- `
@@ -121,10 +112,7 @@ export class ManageLogger implements ILogger {
     return result
   }
 
-  #checkLogLevel (
-    type: string,
-    level: undefined | string | string[]
-  ): boolean {
+  #checkLogLevel(type: string, level: undefined | string | string[]): boolean {
     if (level === undefined || level === 'all') {
       return true
     }
@@ -134,23 +122,23 @@ export class ManageLogger implements ILogger {
     return type === level
   }
 
-  success (...msq: ILogArgvType[]): void {
+  success(...msq: ILogArgvType[]): void {
     return this.#handleLog(ILogType.success, ...msq)
   }
 
-  info (...msq: ILogArgvType[]): void {
+  info(...msq: ILogArgvType[]): void {
     return this.#handleLog(ILogType.info, ...msq)
   }
 
-  error (...msq: ILogArgvTypeWithError[]): void {
+  error(...msq: ILogArgvTypeWithError[]): void {
     return this.#handleLog(ILogType.error, ...msq)
   }
 
-  warn (...msq: ILogArgvType[]): void {
+  warn(...msq: ILogArgvType[]): void {
     return this.#handleLog(ILogType.warn, ...msq)
   }
 
-  debug (...msq: ILogArgvType[]): void {
+  debug(...msq: ILogArgvType[]): void {
     if (isDev) {
       this.#handleLog(ILogType.info, ...msq)
     }

@@ -3,13 +3,7 @@
     <div class="view-title">
       {{ $T('SETTINGS') }}
     </div>
-    <el-row
-      :gutter="15"
-      justify="space-between"
-      align="middle"
-      type="flex"
-      class="config-list"
-    >
+    <el-row :gutter="15" justify="space-between" align="middle" type="flex" class="config-list">
       <el-col
         v-for="item in curConfigList"
         :key="item._id"
@@ -30,17 +24,11 @@
           <div class="config-update-time">
             {{ formatTime(item._updatedAt) }}
           </div>
-          <div
-            v-if="defaultConfigId === item._id"
-            class="default-text"
-          >
+          <div v-if="defaultConfigId === item._id" class="default-text">
             {{ $T('SELECTED_SETTING_HINT') }}
           </div>
           <div class="operation-container">
-            <el-icon
-              class="el-icon-edit"
-              @click="openEditPage(item._id)"
-            >
+            <el-icon class="el-icon-edit" @click="openEditPage(item._id)">
               <Edit />
             </el-icon>
             <el-icon
@@ -61,24 +49,14 @@
         :lg="curConfigList.length === 1 ? 12 : 6"
         :xl="curConfigList.length === 1 ? 12 : 3"
       >
-        <div
-          class="config-item config-item-add"
-          @click="addNewConfig"
-        >
-          <el-icon
-            class="el-icon-plus"
-          >
+        <div class="config-item config-item-add" @click="addNewConfig">
+          <el-icon class="el-icon-plus">
             <Plus />
           </el-icon>
         </div>
       </el-col>
     </el-row>
-    <el-row
-      type="flex"
-      justify="center"
-      :span="24"
-      class="set-default-container"
-    >
+    <el-row type="flex" justify="center" :span="24" class="set-default-container">
       <el-button
         class="set-default-btn"
         type="success"
@@ -91,50 +69,43 @@
     </el-row>
   </div>
 </template>
+
 <script lang="ts" setup>
-// Element Plus 图标
-import { Edit, Delete, Plus } from '@element-plus/icons-vue'
-
-// 数据发送工具函数
-import { saveConfig, triggerRPC } from '@/utils/dataSender'
-
-// 时间处理库
 import dayjs from 'dayjs'
-
-// 枚举类型声明
-import { IRPCActionType } from '~/universal/types/enum'
-
-// 国际化函数
-import { T as $T } from '@/i18n/index'
-
-// Vue Router 相关
-import { useRouter, useRoute, onBeforeRouteUpdate } from 'vue-router'
-
-// Vue 生命周期钩子
+import { Edit, Delete, Plus } from '@element-plus/icons-vue'
 import { onBeforeMount, ref } from 'vue'
+import { useRouter, useRoute, onBeforeRouteUpdate } from 'vue-router'
+import { saveConfig } from '@/utils/dataSender'
 
-// 路由配置常量
-import { PICBEDS_PAGE, UPLOADER_CONFIG_PAGE } from '@/router/config'
-
-// 状态管理
+import { T as $T } from '@/i18n/index'
 import { useStore } from '@/hooks/useStore'
-import { configPaths } from '~/universal/utils/configPaths'
+import { PICBEDS_PAGE, UPLOADER_CONFIG_PAGE } from '@/router/config'
+import { sendRPC, triggerRPC } from '@/utils/common'
 
-const $router = useRouter()
-const $route = useRoute()
+import { IRPCActionType } from '#/types/enum'
+import { configPaths } from '#/utils/configPaths'
+
+const router = useRouter()
+const route = useRoute()
 
 const type = ref('')
 const curConfigList = ref<IStringKeyMap[]>([])
 const defaultConfigId = ref('')
 const store = useStore()
 
-async function selectItem (id: string) {
-  await triggerRPC<void>(IRPCActionType.SELECT_UPLOADER, type.value, id)
+async function selectItem(id: string) {
+  await triggerRPC<void>(IRPCActionType.UPLOADER_SELECT, type.value, id)
+  if (store?.state.defaultPicBed === type.value) {
+    sendRPC(
+      IRPCActionType.TRAY_SET_TOOL_TIP,
+      `${type.value} ${curConfigList.value.find(item => item._id === id)?._configName || ''}`
+    )
+  }
   defaultConfigId.value = id
 }
 
-onBeforeRouteUpdate((to, from, next) => {
-  if (to.params.type && (to.name === UPLOADER_CONFIG_PAGE)) {
+onBeforeRouteUpdate((to, _, next) => {
+  if (to.params.type && to.name === UPLOADER_CONFIG_PAGE) {
     type.value = to.params.type as string
     getCurrentConfigList()
   }
@@ -142,18 +113,18 @@ onBeforeRouteUpdate((to, from, next) => {
 })
 
 onBeforeMount(() => {
-  type.value = $route.params.type as string
+  type.value = route.params.type as string
   getCurrentConfigList()
 })
 
-async function getCurrentConfigList () {
-  const configList = await triggerRPC<IUploaderConfigItem>(IRPCActionType.GET_PICBED_CONFIG_LIST, type.value)
+async function getCurrentConfigList() {
+  const configList = await triggerRPC<IUploaderConfigItem>(IRPCActionType.PICBED_GET_CONFIG_LIST, type.value)
   curConfigList.value = configList?.configList ?? []
   defaultConfigId.value = configList?.defaultId ?? ''
 }
 
-function openEditPage (configId: string) {
-  $router.push({
+function openEditPage(configId: string) {
+  router.push({
     name: PICBEDS_PAGE,
     params: {
       type: type.value,
@@ -165,19 +136,19 @@ function openEditPage (configId: string) {
   })
 }
 
-function formatTime (time: number): string {
-  return dayjs(time).format('YY/MM/DD HH:mm')
+function formatTime(time: number): string {
+  return dayjs(time).format('YY-MM-DD HH:mm')
 }
 
-async function deleteConfig (id: string) {
-  const res = await triggerRPC<IUploaderConfigItem | undefined>(IRPCActionType.DELETE_PICBED_CONFIG, type.value, id)
+async function deleteConfig(id: string) {
+  const res = await triggerRPC<IUploaderConfigItem>(IRPCActionType.PICBED_DELETE_CONFIG, type.value, id)
   if (!res) return
   curConfigList.value = res.configList
   defaultConfigId.value = res.defaultId
 }
 
-function addNewConfig () {
-  $router.push({
+function addNewConfig() {
+  router.push({
     name: PICBEDS_PAGE,
     params: {
       type: type.value,
@@ -186,13 +157,15 @@ function addNewConfig () {
   })
 }
 
-function setDefaultPicBed (type: string) {
+function setDefaultPicBed(type: string) {
   saveConfig({
     [configPaths.picBed.current]: type,
     [configPaths.picBed.uploader]: type
   })
 
   store?.setDefaultPicBed(type)
+  const currentConfigName = curConfigList.value.find(item => item._id === defaultConfigId.value)?._configName
+  sendRPC(IRPCActionType.TRAY_SET_TOOL_TIP, `${type} ${currentConfigName || ''}`)
   const successNotification = new Notification($T('SETTINGS_DEFAULT_PICBED'), {
     body: $T('TIPS_SET_SUCCEED')
   })
@@ -206,7 +179,7 @@ export default {
   name: 'UploaderConfigPage'
 }
 </script>
-<style lang='stylus'>
+<style lang="stylus">
 #config-list-view
   position absolute
   min-height 100%

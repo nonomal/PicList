@@ -1,11 +1,10 @@
-
-import { II18nLanguage, IPasteStyle, ISartMode, IShortUrlServer } from '../types/enum'
+import { II18nLanguage, IPasteStyle, ISartMode, IShortUrlServer } from '#/types/enum'
 import { IBuildInCompressOptions, IBuildInWaterMarkOptions } from 'piclist'
 
-export type ISartModeValues = typeof ISartMode[keyof typeof ISartMode]
-export type IPasteStyleValues = typeof IPasteStyle[keyof typeof IPasteStyle]
-export type II18nLanguageValues = typeof II18nLanguage[keyof typeof II18nLanguage]
-export type IShortUrlServerValues = typeof IShortUrlServer[keyof typeof IShortUrlServer]
+export type ISartModeValues = (typeof ISartMode)[keyof typeof ISartMode]
+export type IPasteStyleValues = (typeof IPasteStyle)[keyof typeof IPasteStyle]
+export type II18nLanguageValues = (typeof II18nLanguage)[keyof typeof II18nLanguage]
+export type IShortUrlServerValues = (typeof IShortUrlServer)[keyof typeof IShortUrlServer]
 export type manualPageOpenType = 'window' | 'browser'
 
 interface IPicGoPlugins {
@@ -14,10 +13,10 @@ interface IPicGoPlugins {
 
 export interface IConfigStruct {
   picBed: {
-    uploader: string,
-    current?: string,
-    smms?: ISMMSConfig,
-    qiniu?: IQiniuConfig,
+    uploader: string
+    current?: string
+    smms?: ISMMSConfig
+    qiniu?: IQiniuConfig
     upyun?: IUpYunConfig
     tcyun?: ITcYunConfig
     github?: IGitHubConfig
@@ -26,14 +25,13 @@ export interface IConfigStruct {
     webdavplist?: IWebdavPlistConfig
     local?: ILocalConfig
     sftpplist?: ISftpPlistConfig
-    telegraphplist?: ITelegraphConfig
     lskyplist?: ILskyConfig
     'aws-s3-plist': IAwsS3PListUserConfig
     proxy?: string
     transformer?: string
     list: IPicBedType[]
     [others: string]: any
-  },
+  }
   settings: {
     shortKey: {
       [key: string]: IShortKeyConfig
@@ -73,6 +71,8 @@ export interface IConfigStruct {
     cfWorkerHost: string
     yourlsDomain: string
     yourlsSignature: string
+    sinkDomain: string
+    sinkToken: string
     isSilentNotice: boolean
     proxy: string
     registry: string
@@ -104,86 +104,13 @@ export interface IConfigStruct {
   PICGO_ENV: string
 }
 
-interface IConfigPaths {
-  picBed: {
-    current: string
-    uploader: string
-    proxy: string
-    transformer: string
-    list: string
-  },
-  settings: {
-    shortKey: {
-      _path: string
-      'picgo:upload': string
-    }
-    logLevel: string
-    logPath: string
-    logFileSizeLimit: string
-    isAutoListenClipboard: string
-    isListeningClipboard: string
-    showUpdateTip: string
-    miniWindowPosition: string
-    miniWindowOntop: string
-    isHideDock: string
-    mainWindowWidth: string
-    mainWindowHeight: string
-    autoCloseMiniWindow: string
-    autoCloseMainWindow: string
-    isCustomMiniIcon: string
-    customMiniIcon: string
-    startMode: string
-    autoRename: string
-    deleteCloudFile: string
-    server: string
-    serverKey: string
-    pasteStyle: string
-    aesPassword: string
-    rename: string
-    sync: string
-    tempDirPath: string
-    language: string
-    customLink: string
-    manualPageOpen: string
-    encodeOutputURL: string
-    useShortUrl: string
-    shortUrlServer: string
-    c1nToken: string
-    cfWorkerHost: string
-    yourlsDomain: string
-    yourlsSignature: string
-    isSilentNotice: string
-    proxy: string
-    registry: string
-    autoCopy: string
-    enableWebServer: string
-    webServerHost: string
-    webServerPort: string
-    webServerPath: string
-    deleteLocalFile: string
-    uploadResultNotification: string
-    uploadNotification: string
-    useBuiltinClipboard: string
-    autoStart: string
-    autoImport: string
-    autoImportPicBed: string
-  }
-  needReload: string
-  picgoPlugins: string
-  uploader: string
-  buildIn: {
-    compress: string
-    watermark: string
-    rename: string
-  }
-  debug: string
-  PICGO_ENV: string
-}
-
-export const configPaths: IConfigPaths = {
+export const configPaths = {
   picBed: {
     current: 'picBed.current',
     uploader: 'picBed.uploader',
+    secondUploader: 'picBed.secondUploader',
+    secondUploaderId: 'picBed.secondUploaderId',
+    secondUploaderConfig: 'picBed.secondUploaderConfig',
     proxy: 'picBed.proxy',
     transformer: 'picBed.transformer',
     list: 'picBed.list'
@@ -228,6 +155,8 @@ export const configPaths: IConfigPaths = {
     cfWorkerHost: 'settings.cfWorkerHost',
     yourlsDomain: 'settings.yourlsDomain',
     yourlsSignature: 'settings.yourlsSignature',
+    sinkDomain: 'settings.sinkDomain',
+    sinkToken: 'settings.sinkToken',
     isSilentNotice: 'settings.isSilentNotice',
     proxy: 'settings.proxy',
     registry: 'settings.registry',
@@ -242,7 +171,8 @@ export const configPaths: IConfigPaths = {
     useBuiltinClipboard: 'settings.useBuiltinClipboard',
     autoStart: 'settings.autoStart',
     autoImport: 'settings.autoImport',
-    autoImportPicBed: 'settings.autoImportPicBed'
+    autoImportPicBed: 'settings.autoImportPicBed',
+    enableSecondUploader: 'settings.enableSecondUploader'
   },
   needReload: 'needReload',
   picgoPlugins: 'picgoPlugins',

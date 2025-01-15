@@ -1,6 +1,8 @@
 import path from 'path'
 import { app } from 'electron'
-import { getLogger } from 'apis/core/utils/localLogger'
+
+import { getLogger } from '@core/utils/localLogger'
+
 const STORE_PATH = app.getPath('userData')
 const LOG_PATH = path.join(STORE_PATH, 'piclist-gui-local.log')
 
@@ -22,9 +24,9 @@ process.on('unhandledRejection', (error: any) => {
 })
 
 // acconrding to https://github.com/Molunerfinn/PicGo/commit/7363be798cfef11e980934e542817ff1d6c04389#diff-896d0db4fbd446798fbffec14d456b4cd98d4c72c46856c770a585fa7ab0926f
-function bootstrapEPIPESuppression () {
+function bootstrapEPIPESuppression() {
   let suppressing = false
-  function logEPIPEErrorOnce () {
+  function logEPIPEErrorOnce() {
     if (suppressing) {
       return
     }

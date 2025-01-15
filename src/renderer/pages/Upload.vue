@@ -1,31 +1,14 @@
 <template>
   <div id="upload-view">
-    <el-row
-      :gutter="16"
-      align="middle"
-    >
-      <el-col
-        :span="24"
-      >
+    <el-row :gutter="16" align="middle">
+      <el-col :span="24">
         <div class="view-title">
-          <el-tooltip
-            placement="top"
-            effect="light"
-            :content="$T('UPLOAD_VIEW_HINT')"
-            :persistent="false"
-            teleported
-          >
-            <span
-              id="upload-view-title"
-              @click="handlePicBedNameClick(picBedName, picBedConfigName)"
-            >
+          <el-tooltip placement="top" effect="light" :content="$T('UPLOAD_VIEW_HINT')" :persistent="false" teleported>
+            <span id="upload-view-title" @click="handlePicBedNameClick(picBedName, picBedConfigName)">
               {{ picBedName }} - {{ picBedConfigName || 'Default' }}
             </span>
           </el-tooltip>
-          <el-icon
-            style="cursor: pointer; margin-left: 4px;"
-            @click="handleChangePicBed"
-          >
+          <el-icon style="cursor: pointer; margin-left: 4px" @click="handleChangePicBed">
             <CaretBottom />
           </el-icon>
           <el-button
@@ -46,29 +29,22 @@
           @dragover.prevent="dragover = true"
           @dragleave.prevent="dragover = false"
         >
-          <div
-            id="upload-dragger"
-            @click="openUplodWindow"
-          >
+          <div id="upload-dragger" @click="openUplodWindow">
             <el-icon>
               <UploadFilled />
             </el-icon>
             <div class="upload-dragger__text">
-              {{ $T('DRAG_FILE_TO_HERE') }} <span>{{ $T('CLICK_TO_UPLOAD') }}</span>
+              {{ $T('DRAG_FILE_TO_HERE') }}
+              <span>{{ $T('CLICK_TO_UPLOAD') }}</span>
             </div>
-            <input
-              id="file-uploader"
-              type="file"
-              multiple
-              @change="onChange"
-            >
+            <input id="file-uploader" type="file" multiple @change="onChange" />
           </div>
         </div>
         <el-progress
           :percentage="progress"
           :show-text="false"
           class="upload-progress"
-          :class="{ 'show': showProgress }"
+          :class="{ show: showProgress }"
           :status="showError ? 'exception' : undefined"
         />
         <div class="paste-style">
@@ -76,49 +52,16 @@
             <div class="paste-style__text">
               {{ $T('LINK_FORMAT') }}
             </div>
-            <el-radio-group
-              v-model="pasteStyle"
-              size="small"
-              @change="handlePasteStyleChange"
-            >
-              <el-radio-button
-                label="markdown"
-                title="![alt](url)"
-              >
-                Markdown
+            <el-radio-group v-model="pasteStyle" size="small" @change="handlePasteStyleChange">
+              <el-radio-button v-for="(item, key) in pasteFormatList" :key="key" :value="key" :title="item">
+                {{ key }}
               </el-radio-button>
-              <el-radio-button
-                label="HTML"
-                title="<img src='url'/>"
-              />
-              <el-radio-button
-                label="URL"
-                title="http://test.com/test.png"
-              />
-              <el-radio-button
-                label="UBB"
-                title="[img]url[/img]"
-              />
-              <el-radio-button
-                label="Custom"
-                :title="customLink"
-              />
             </el-radio-group>
-            <el-radio-group
-              v-model="useShortUrl"
-              size="small"
-              @change="handleUseShortUrlChange"
-            >
-              <el-radio-button
-                :label="true"
-                style="border-radius: 5px"
-              >
+            <el-radio-group v-model="useShortUrl" size="small" @change="handleUseShortUrlChange">
+              <el-radio-button :value="true" style="border-radius: 5px">
                 {{ $T('UPLOAD_SHORT_URL') }}
               </el-radio-button>
-              <el-radio-button
-                :label="false"
-                style="border-radius: 5px"
-              >
+              <el-radio-button :value="false" style="border-radius: 5px">
                 {{ $T('UPLOAD_NORMAL_URL') }}
               </el-radio-button>
             </el-radio-group>
@@ -160,443 +103,59 @@
       align-center
       append-to-body
     >
-      <el-form
-        label-position="top"
-        require-asterisk-position="right"
-        label-width="10vw"
-        size="default"
-        :model="waterMarkForm"
-      >
-        <el-form-item
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_ISADDWM')"
-        >
-          <el-switch
-            v-model="waterMarkForm.isAddWatermark"
-            style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;"
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="waterMarkForm.isAddWatermark"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_WMTYPE')"
-        >
-          <el-radio-group v-model="waterMarkForm.watermarkType">
-            <el-radio label="text">
-              {{ $T('UPLOAD_PAGE_IMAGE_PROCESS_WMTYPE_TEXT') }}
-            </el-radio>
-            <el-radio label="image">
-              {{ $T('UPLOAD_PAGE_IMAGE_PROCESS_WMTYPE_IMAGE') }}
-            </el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item
-          v-show="waterMarkForm.isAddWatermark"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_ISFULLSCREEN_WM')"
-        >
-          <el-switch
-            v-model="waterMarkForm.isFullScreenWatermark"
-            style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;"
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="waterMarkForm.isAddWatermark"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_WMDEGREE')"
-        >
-          <el-input-number
-            v-model="waterMarkForm.watermarkDegree"
-            :step="1"
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="waterMarkForm.isAddWatermark && waterMarkForm.watermarkType === 'text'"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_WMTEXT')"
-        >
-          <el-input v-model="waterMarkForm.watermarkText" />
-        </el-form-item>
-        <el-form-item
-          v-show="waterMarkForm.isAddWatermark && waterMarkForm.watermarkType === 'text'"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_WMTEXT_FONT_PATH')"
-        >
-          <el-input v-model="waterMarkForm.watermarkFontPath" />
-        </el-form-item>
-        <el-form-item
-          v-show="waterMarkForm.isAddWatermark"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_WMRATIO')"
-        >
-          <el-input-number
-            v-model="waterMarkForm.watermarkScaleRatio"
-            :min="0"
-            :max="1"
-            :step="0.01"
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="waterMarkForm.isAddWatermark && waterMarkForm.watermarkType === 'text'"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_WMCOLOR')"
-        >
-          <el-color-picker
-            v-model="waterMarkForm.watermarkColor"
-            show-alpha
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="waterMarkForm.isAddWatermark && waterMarkForm.watermarkType === 'image'"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_WMPATH')"
-        >
-          <el-input v-model="waterMarkForm.watermarkImagePath" />
-        </el-form-item>
-        <el-form-item
-          v-show="waterMarkForm.isAddWatermark"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_WMPOSITION')"
-        >
-          <el-radio-group
-            v-model="waterMarkForm.watermarkPosition"
-          >
-            <el-radio
-              v-for="item in waterMarkPositionMap"
-              :key="item[0]"
-              :label="item[0]"
-            >
-              {{ item[1] }}
-            </el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_ISREMOVEEXIF')"
-        >
-          <el-switch
-            v-model="compressForm.isRemoveExif"
-            style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;"
-          />
-        </el-form-item>
-        <el-form-item
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_QUALITY')"
-        >
-          <el-input-number
-            v-model="compressForm.quality"
-            :min="0"
-            :max="100"
-            :step="1"
-          />
-        </el-form-item>
-        <el-form-item
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_ISCONVERT')"
-        >
-          <el-switch
-            v-model="compressForm.isConvert"
-            style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;"
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="compressForm.isConvert"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_CONVERTFORMAT')"
-        >
-          <el-select
-            v-model="compressForm.convertFormat"
-            :persistent="false"
-            teleported
-          >
-            <el-option
-              v-for="item in availableFormat"
-              :key="item"
-              :label="item"
-              :value="item"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item
-          v-show="compressForm.isConvert"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_CONVERTFORMAT_SPECIFIC')"
-        >
-          <el-input
-            v-model="formatConvertObj"
-            placeholder="{&quot;jpg&quot;: &quot;png&quot;, &quot;png&quot;: &quot;jpg&quot;}"
-            type="textarea"
-            :autosize="{ minRows: 2, maxRows: 4}"
-          />
-        </el-form-item>
-        <el-form-item
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_ISFLIP')"
-        >
-          <el-switch
-            v-model="compressForm.isFlip"
-            style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;"
-          />
-        </el-form-item>
-        <el-form-item
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_ISFLOP')"
-        >
-          <el-switch
-            v-model="compressForm.isFlop"
-            style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;"
-          />
-        </el-form-item>
-        <el-form-item
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_ISRESIZE')"
-        >
-          <el-switch
-            v-model="compressForm.isReSize"
-            style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;"
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="compressForm.isReSize"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_RESIZEWIDTH')"
-        >
-          <el-input-number
-            v-model="compressForm.reSizeWidth"
-            :min="0"
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="compressForm.isReSize"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_RESIZEHEIGHT')"
-        >
-          <el-input-number
-            v-model="compressForm.reSizeHeight"
-            :min="0"
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="compressForm.isReSize && compressForm.reSizeHeight > 0 && compressForm.reSizeWidth === 0"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_SKIPRESIZEOfSMALLIMG_HEIGHT')"
-        >
-          <el-switch
-            v-model="compressForm.skipReSizeOfSmallImg"
-            style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;"
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="compressForm.isReSize && compressForm.reSizeWidth > 0 && compressForm.reSizeHeight === 0"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_SKIPRESIZEOfSMALLIMG_WIDTH')"
-        >
-          <el-switch
-            v-model="compressForm.skipReSizeOfSmallImg"
-            style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;"
-          />
-        </el-form-item>
-        <el-form-item
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_ISRESIZEBYPERCENT')"
-        >
-          <el-switch
-            v-model="compressForm.isReSizeByPercent"
-            style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;"
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="compressForm.isReSizeByPercent"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_RESIZEPERCENT')"
-        >
-          <el-input-number
-            v-model="compressForm.reSizePercent"
-            :min="0"
-          />
-        </el-form-item>
-        <el-form-item
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_ISROTATE')"
-        >
-          <el-switch
-            v-model="compressForm.isRotate"
-            style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;"
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="compressForm.isRotate"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_ROTATEDEGREE')"
-        >
-          <el-input-number
-            v-model="compressForm.rotateDegree"
-            :step="1"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-button
-            type="primary"
-            @click="handleSaveConfig"
-          >
-            {{ $T('UPLOAD_PAGE_IMAGE_PROCESS_CONFIRM') }}
-          </el-button>
-          <el-button @click="closeDialog">
-            {{ $T('UPLOAD_PAGE_IMAGE_PROCESS_CANCEL') }}
-          </el-button>
-        </el-form-item>
-      </el-form>
+      <ImageProcessSetting v-model="imageProcessDialogVisible" />
     </el-dialog>
   </div>
 </template>
+
 <script lang="ts" setup>
-// Element Plus 图标
-import { UploadFilled, CaretBottom } from '@element-plus/icons-vue'
-
-// Electron 相关
 import { ipcRenderer, IpcRendererEvent } from 'electron'
-
-// Vue 相关
-import { ref, reactive, onBeforeMount, onBeforeUnmount, watch, toRaw } from 'vue'
-
-// 国际化函数
-import { T as $T } from '@/i18n'
-
-// 事件总线
-import $bus from '@/utils/bus'
-
-// 事件常量
-import {
-  SHOW_INPUT_BOX,
-  SHOW_INPUT_BOX_RESPONSE,
-  SHOW_UPLOAD_PAGE_MENU,
-  GET_PICBEDS
-} from '~/universal/events/constants'
-
-// 工具函数
-import {
-  isUrl
-} from '~/universal/utils/common'
-
-// Element Plus 消息提示
 import { ElMessage as $message } from 'element-plus'
-
-// 数据发送工具函数
-import { getConfig, saveConfig, sendToMain, triggerRPC } from '@/utils/dataSender'
-
-// 类型声明
-import { IBuildInCompressOptions, IBuildInWaterMarkOptions } from 'piclist'
-
-// Vue Router 相关
+import { UploadFilled, CaretBottom } from '@element-plus/icons-vue'
+import { ref, onBeforeMount, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-// 路由配置常量
+import ImageProcessSetting from '@/components/ImageProcessSetting.vue'
+import { T as $T } from '@/i18n'
 import { PICBEDS_PAGE } from '@/router/config'
-import { IPasteStyle, IRPCActionType } from '~/universal/types/enum'
-import { configPaths } from '~/universal/utils/configPaths'
+import $bus from '@/utils/bus'
+import { sendRPC, triggerRPC } from '@/utils/common'
+import { getConfig, saveConfig } from '@/utils/dataSender'
+import { picBedGlobal, updatePicBedGlobal } from '@/utils/global'
 
+import { SHOW_INPUT_BOX, SHOW_INPUT_BOX_RESPONSE } from '#/events/constants'
+import { IPasteStyle, IRPCActionType } from '#/types/enum'
+import { isUrl } from '#/utils/common'
+import { configPaths } from '#/utils/configPaths'
+import { useDragEventListeners } from '@/utils/drag'
+
+useDragEventListeners()
 const $router = useRouter()
 
 const imageProcessDialogVisible = ref(false)
 const useShortUrl = ref(false)
-
-const waterMarkPositionMap = new Map([
-  ['north', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_TOP')],
-  ['northeast', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_TOP_RIGHT')],
-  ['southeast', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_BOTTOM_RIGHT')],
-  ['south', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_BOTTOM')],
-  ['southwest', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_BOTTOM_LEFT')],
-  ['northwest', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_TOP_LEFT')],
-  ['west', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_LEFT')],
-  ['east', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_RIGHT')],
-  ['centre', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_CENTER')]
-])
-
-const imageExtList = ['jpg', 'jpeg', 'png', 'webp', 'bmp', 'tiff', 'tif', 'svg', 'ico', 'avif', 'heif', 'heic']
-
-const availableFormat = ['avif', 'dz', 'fits', 'gif', 'heif', 'input', 'jpeg', 'jpg', 'jp2', 'jxl', 'magick', 'openslide', 'pdf', 'png', 'ppm', 'raw', 'svg', 'tiff', 'tif', 'v', 'webp']
-
-const waterMarkForm = reactive<any>({
-  isAddWatermark: false,
-  watermarkType: 'text',
-  isFullScreenWatermark: false,
-  watermarkDegree: 0,
-  watermarkText: '',
-  watermarkFontPath: '',
-  watermarkScaleRatio: 0.15,
-  watermarkColor: '#CCCCCC73',
-  watermarkImagePath: '',
-  watermarkPosition: 'southeast'
-})
-
-const compressForm = reactive<any>({
-  quality: 100,
-  isConvert: false,
-  convertFormat: 'jpg',
-  isReSize: false,
-  reSizeWidth: 500,
-  reSizeHeight: 500,
-  skipReSizeOfSmallImg: false,
-  isReSizeByPercent: false,
-  reSizePercent: 50,
-  isRotate: false,
-  rotateDegree: 0,
-  isRemoveExif: false,
-  isFlip: false,
-  isFlop: false
-})
-
-const formatConvertObj = ref('{}')
-
-function closeDialog () {
-  imageProcessDialogVisible.value = false
-}
-
-function handleSaveConfig () {
-  let iformatConvertObj = {}
-  try {
-    iformatConvertObj = JSON.parse(formatConvertObj.value)
-  } catch (error) {
-  }
-  const formatConvertObjEntries = Object.entries(iformatConvertObj)
-  const formatConvertObjEntriesFilter = formatConvertObjEntries.filter((item: any) => {
-    return imageExtList.includes(item[0]) && availableFormat.includes(item[1])
-  })
-  const formatConvertObjFilter = Object.fromEntries(formatConvertObjEntriesFilter)
-  formatConvertObj.value = JSON.stringify(formatConvertObjFilter)
-  compressForm.formatConvertObj = formatConvertObjFilter
-  saveConfig(configPaths.buildIn.compress, toRaw(compressForm))
-  saveConfig(configPaths.buildIn.watermark, toRaw(waterMarkForm))
-  closeDialog()
-}
-
-async function initData () {
-  const compress = await getConfig<IBuildInCompressOptions>(configPaths.buildIn.compress)
-  const watermark = await getConfig<IBuildInWaterMarkOptions>(configPaths.buildIn.watermark)
-  if (compress) {
-    compressForm.quality = compress.quality ?? 100
-    compressForm.isConvert = compress.isConvert ?? false
-    compressForm.convertFormat = compress.convertFormat ?? 'jpg'
-    compressForm.isReSize = compress.isReSize ?? false
-    compressForm.reSizeWidth = compress.reSizeWidth ?? 500
-    compressForm.reSizeHeight = compress.reSizeHeight ?? 500
-    compressForm.skipReSizeOfSmallImg = compress.skipReSizeOfSmallImg ?? false
-    compressForm.isReSizeByPercent = compress.isReSizeByPercent ?? false
-    compressForm.reSizePercent = compress.reSizePercent ?? 50
-    compressForm.isRotate = compress.isRotate ?? false
-    compressForm.rotateDegree = compress.rotateDegree ?? 0
-    compressForm.isRemoveExif = compress.isRemoveExif ?? false
-    compressForm.isFlip = compress.isFlip ?? false
-    compressForm.isFlop = compress.isFlop ?? false
-    try {
-      if (typeof compress.formatConvertObj === 'object') {
-        formatConvertObj.value = JSON.stringify(compress.formatConvertObj)
-      } else {
-        formatConvertObj.value = compress.formatConvertObj ?? '{}'
-      }
-    } catch (error) {
-      formatConvertObj.value = '{}'
-    }
-  }
-  if (watermark) {
-    waterMarkForm.isAddWatermark = watermark.isAddWatermark ?? false
-    waterMarkForm.watermarkType = watermark.watermarkType ?? 'text'
-    waterMarkForm.isFullScreenWatermark = watermark.isFullScreenWatermark ?? false
-    waterMarkForm.watermarkDegree = watermark.watermarkDegree ?? 0
-    waterMarkForm.watermarkText = watermark.watermarkText ?? ''
-    waterMarkForm.watermarkFontPath = watermark.watermarkFontPath ?? ''
-    waterMarkForm.watermarkScaleRatio = watermark.watermarkScaleRatio ?? 0.15
-    waterMarkForm.watermarkColor = watermark.watermarkColor === undefined || watermark.watermarkColor === '' ? '#CCCCCC73' : watermark.watermarkColor
-    waterMarkForm.watermarkImagePath = watermark.watermarkImagePath ?? ''
-    waterMarkForm.watermarkPosition = watermark.watermarkPosition ?? 'southeast'
-  }
-}
-
 const dragover = ref(false)
 const progress = ref(0)
 const showProgress = ref(false)
 const showError = ref(false)
 const pasteStyle = ref('')
-const picBed = ref<IPicBedType[]>([])
 const picBedName = ref('')
-const customLink = ref('')
 const picBedConfigName = ref('')
 
+const pasteFormatList = ref({
+  [IPasteStyle.MARKDOWN]: '![alt](url)',
+  [IPasteStyle.HTML]: '<img src="url"/>',
+  [IPasteStyle.URL]: 'http://test.com/test.png',
+  [IPasteStyle.UBB]: '[img]url[/img]',
+  [IPasteStyle.CUSTOM]: ''
+})
+
+watch(picBedGlobal, () => {
+  getDefaultPicBed()
+})
+
 onBeforeMount(() => {
+  updatePicBedGlobal()
   ipcRenderer.on('uploadProgress', (_event: IpcRendererEvent, _progress: number) => {
     if (_progress !== -1) {
       showProgress.value = true
@@ -612,10 +171,7 @@ onBeforeMount(() => {
   ipcRenderer.on('syncPicBed', () => {
     getDefaultPicBed()
   })
-  sendToMain(GET_PICBEDS)
-  ipcRenderer.on(GET_PICBEDS, getPicBeds)
   $bus.on(SHOW_INPUT_BOX_RESPONSE, handleInputBoxValue)
-  initData()
 })
 
 const handleImageProcess = () => {
@@ -624,7 +180,7 @@ const handleImageProcess = () => {
 
 watch(progress, onProgressChange)
 
-function onProgressChange (val: number) {
+function onProgressChange(val: number) {
   if (val === 100) {
     setTimeout(() => {
       showProgress.value = false
@@ -636,11 +192,11 @@ function onProgressChange (val: number) {
   }
 }
 
-async function handlePicBedNameClick (_picBedName: string, picBedConfigName: string | undefined) {
+async function handlePicBedNameClick(_picBedName: string, picBedConfigName: string | undefined) {
   const formatedpicBedConfigName = picBedConfigName || 'Default'
   const currentPicBed = await getConfig<string>(configPaths.picBed.current)
-  const currentPicBedConfig = await getConfig<any[]>(`uploader.${currentPicBed}`) as any || {}
-  const configList = await triggerRPC<IUploaderConfigItem>(IRPCActionType.GET_PICBED_CONFIG_LIST, currentPicBed)
+  const currentPicBedConfig = ((await getConfig<any[]>(`uploader.${currentPicBed}`)) as any) || {}
+  const configList = await triggerRPC<IUploaderConfigItem>(IRPCActionType.PICBED_GET_CONFIG_LIST, currentPicBed)
   const currentConfigList = configList?.configList ?? []
   const config = currentConfigList.find((item: any) => item._configName === formatedpicBedConfigName)
   $router.push({
@@ -659,24 +215,22 @@ onBeforeUnmount(() => {
   $bus.off(SHOW_INPUT_BOX_RESPONSE)
   ipcRenderer.removeAllListeners('uploadProgress')
   ipcRenderer.removeAllListeners('syncPicBed')
-  ipcRenderer.removeListener(GET_PICBEDS, getPicBeds)
 })
 
-function onDrop (e: DragEvent) {
+function onDrop(e: DragEvent) {
   dragover.value = false
-  const items = e.dataTransfer?.items!
-  const files = e.dataTransfer?.files!
 
   // send files first
-  if (files?.length) {
-    ipcSendFiles(e.dataTransfer?.files!)
-  } else {
+  if (e.dataTransfer?.files?.length) {
+    ipcSendFiles(e.dataTransfer.files)
+  } else if (e.dataTransfer?.items) {
+    const items = e.dataTransfer.items
     if (items.length === 2 && items[0].type === 'text/uri-list') {
-      handleURLDrag(items, e.dataTransfer!)
+      handleURLDrag(items, e.dataTransfer)
     } else if (items[0].type === 'text/plain') {
-      const str = e.dataTransfer!.getData(items[0].type)
+      const str = e.dataTransfer.getData(items[0].type)
       if (isUrl(str)) {
-        sendToMain('uploadChoosedFiles', [{ path: str }])
+        sendRPC(IRPCActionType.UPLOAD_CHOOSED_FILES, [{ path: str }])
       } else {
         $message.error($T('TIPS_DRAG_VALID_PICTURE_OR_URL'))
       }
@@ -684,13 +238,13 @@ function onDrop (e: DragEvent) {
   }
 }
 
-function handleURLDrag (items: DataTransferItemList, dataTransfer: DataTransfer) {
+function handleURLDrag(items: DataTransferItemList, dataTransfer: DataTransfer) {
   // text/html
   // Use this data to get a more precise URL
   const urlString = dataTransfer.getData(items[1].type)
   const urlMatch = urlString.match(/<img.*src="(.*?)"/)
   if (urlMatch) {
-    sendToMain('uploadChoosedFiles', [
+    sendRPC(IRPCActionType.UPLOAD_CHOOSED_FILES, [
       {
         path: urlMatch[1]
       }
@@ -700,53 +254,53 @@ function handleURLDrag (items: DataTransferItemList, dataTransfer: DataTransfer)
   }
 }
 
-function openUplodWindow () {
+function openUplodWindow() {
   document.getElementById('file-uploader')!.click()
 }
 
-function onChange (e: any) {
-  ipcSendFiles(e.target.files);
-  (document.getElementById('file-uploader') as HTMLInputElement).value = ''
+function onChange(e: any) {
+  ipcSendFiles(e.target.files)
+  ;(document.getElementById('file-uploader') as HTMLInputElement).value = ''
 }
 
-function ipcSendFiles (files: FileList) {
+function ipcSendFiles(files: FileList) {
   const sendFiles: IFileWithPath[] = []
-  Array.from(files).forEach((item) => {
+  Array.from(files).forEach(item => {
     const obj = {
       name: item.name,
       path: item.path
     }
     sendFiles.push(obj)
   })
-  sendToMain('uploadChoosedFiles', sendFiles)
+  sendRPC(IRPCActionType.UPLOAD_CHOOSED_FILES, sendFiles)
 }
 
-async function getPasteStyle () {
-  pasteStyle.value = await getConfig(configPaths.settings.pasteStyle) || IPasteStyle.MARKDOWN
-  customLink.value = await getConfig(configPaths.settings.customLink) || '![$fileName]($url)'
+async function getPasteStyle() {
+  pasteStyle.value = (await getConfig(configPaths.settings.pasteStyle)) || IPasteStyle.MARKDOWN
+  pasteFormatList.value.Custom = (await getConfig(configPaths.settings.customLink)) || '![$fileName]($url)'
 }
 
-async function getUseShortUrl () {
-  useShortUrl.value = await getConfig(configPaths.settings.useShortUrl) || false
+async function getUseShortUrl() {
+  useShortUrl.value = (await getConfig(configPaths.settings.useShortUrl)) || false
 }
 
-async function handleUseShortUrlChange () {
+async function handleUseShortUrlChange() {
   saveConfig({
     [configPaths.settings.useShortUrl]: useShortUrl.value
   })
 }
 
-function handlePasteStyleChange (val: string | number | boolean) {
+function handlePasteStyleChange(val: string | number | boolean | undefined) {
   saveConfig({
-    [configPaths.settings.pasteStyle]: val
+    [configPaths.settings.pasteStyle]: val || IPasteStyle.MARKDOWN
   })
 }
 
-function uploadClipboardFiles () {
-  sendToMain('uploadClipboardFilesFromUploadPage')
+function uploadClipboardFiles() {
+  sendRPC(IRPCActionType.UPLOAD_CLIPBOARD_FILES_FROM_UPLOAD_PAGE)
 }
 
-async function uploadURLFiles () {
+async function uploadURLFiles() {
   const str = await navigator.clipboard.readText()
   $bus.emit(SHOW_INPUT_BOX, {
     value: isUrl(str) ? str : '',
@@ -755,42 +309,41 @@ async function uploadURLFiles () {
   })
 }
 
-function handleInputBoxValue (val: string) {
+function handleInputBoxValue(val: string) {
   if (val === '') return
   if (isUrl(val)) {
-    sendToMain('uploadChoosedFiles', [{
-      path: val
-    }])
+    sendRPC(IRPCActionType.UPLOAD_CHOOSED_FILES, [
+      {
+        path: val
+      }
+    ])
   } else {
     $message.error($T('TIPS_INPUT_VALID_URL'))
   }
 }
 
-async function getDefaultPicBed () {
+async function getDefaultPicBed() {
   const currentPicBed = await getConfig<string>(configPaths.picBed.current)
-  picBed.value.forEach(item => {
+  picBedGlobal.value.forEach(item => {
     if (item.type === currentPicBed) {
       picBedName.value = item.name
     }
   })
-  picBedConfigName.value = await getConfig<string>(`picBed.${currentPicBed}._configName`) || ''
+  picBedConfigName.value = (await getConfig<string>(`picBed.${currentPicBed}._configName`)) || ''
 }
 
-function getPicBeds (_event: Event, picBeds: IPicBedType[]) {
-  picBed.value = picBeds
-  getDefaultPicBed()
-}
-
-async function handleChangePicBed () {
-  sendToMain(SHOW_UPLOAD_PAGE_MENU)
+async function handleChangePicBed() {
+  sendRPC(IRPCActionType.SHOW_UPLOAD_PAGE_MENU)
 }
 </script>
+
 <script lang="ts">
 export default {
   name: 'UploadPage'
 }
 </script>
-<style lang='stylus'>
+
+<style lang="stylus">
 .view-title
   display flex
   color #eee

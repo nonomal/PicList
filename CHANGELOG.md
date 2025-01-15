@@ -1,3 +1,206 @@
+## :tada: 2.9.7 (2024-12-30)
+
+
+### :bug: Bug Fixes
+
+* **custom:** fix file delete bug ([e2e802b](https://github.com/Kuingsmile/piclist/commit/e2e802b))
+* **custom:** fix start mode in mac and win ([8815089](https://github.com/Kuingsmile/piclist/commit/8815089)), closes [#281](https://github.com/Kuingsmile/piclist/issues/281)
+* **custom:** fix webdav rename bug ([2bdd2d5](https://github.com/Kuingsmile/piclist/commit/2bdd2d5)), closes [#278](https://github.com/Kuingsmile/piclist/issues/278)
+
+
+### :pencil: Documentation
+
+* **custom:** prepare for new version ([24d8b01](https://github.com/Kuingsmile/piclist/commit/24d8b01))
+
+
+
+## :tada: 2.9.6 (2024-12-04)
+
+
+### :bug: Bug Fixes
+
+* **custom:** fix auto name bug ([84be430](https://github.com/Kuingsmile/piclist/commit/84be430))
+* **custom:** fix plugin search bug ([3455c08](https://github.com/Kuingsmile/piclist/commit/3455c08)), closes [#269](https://github.com/Kuingsmile/piclist/issues/269)
+
+
+### :pencil: Documentation
+
+* **custom:** prepare for new version ([a6a2f9a](https://github.com/Kuingsmile/piclist/commit/a6a2f9a))
+
+
+
+## :tada: 2.9.5 (2024-11-16)
+
+
+### :sparkles: Features
+
+* **custom:** add support for sink ([b843278](https://github.com/Kuingsmile/piclist/commit/b843278)), closes [#254](https://github.com/Kuingsmile/piclist/issues/254)
+* **custom:** optimize short url ([fd5316a](https://github.com/Kuingsmile/piclist/commit/fd5316a)), closes [#252](https://github.com/Kuingsmile/piclist/issues/252)
+* **custom:** support use presigned url for image preview ([4209838](https://github.com/Kuingsmile/piclist/commit/4209838)), closes [#265](https://github.com/Kuingsmile/piclist/issues/265)
+
+
+### :bug: Bug Fixes
+
+* **custom:** await RPC call for download directory selection ([2079faa](https://github.com/Kuingsmile/piclist/commit/2079faa))
+* **custom:** quality must be an int between 1-100 ([cd48b24](https://github.com/Kuingsmile/piclist/commit/cd48b24))
+
+
+### :pencil: Documentation
+
+* **custom:** prepare for 2.9.5 ([c5aaa37](https://github.com/Kuingsmile/piclist/commit/c5aaa37))
+* **custom:** update FAQ ([a9eed2d](https://github.com/Kuingsmile/piclist/commit/a9eed2d))
+
+
+
+## :tada: 2.9.4 (2024-10-22)
+
+
+### :sparkles: Features
+
+* **custom:** change default short key ([64fba8a](https://github.com/Kuingsmile/piclist/commit/64fba8a))
+* **custom:** optimize second uploader ([0565ce3](https://github.com/Kuingsmile/piclist/commit/0565ce3)), closes [#241](https://github.com/Kuingsmile/piclist/issues/241) [#238](https://github.com/Kuingsmile/piclist/issues/238)
+* **custom:** remove telegra.ph ([59ed79a](https://github.com/Kuingsmile/piclist/commit/59ed79a))
+
+
+### :bug: Bug Fixes
+
+* **custom:** fix gallery image delete bug ([d6f48e5](https://github.com/Kuingsmile/piclist/commit/d6f48e5)), closes [#239](https://github.com/Kuingsmile/piclist/issues/239)
+* **custom:** fix webdav url bug ([07cf63a](https://github.com/Kuingsmile/piclist/commit/07cf63a)), closes [#243](https://github.com/Kuingsmile/piclist/issues/243)
+
+
+### :pencil: Documentation
+
+* **custom:** prepare for 2.9.4 ([4b12e42](https://github.com/Kuingsmile/piclist/commit/4b12e42))
+
+
+
+## :tada: 2.9.3 (2024-08-22)
+
+
+### :sparkles: Features
+
+* **custom:** add advanced picbed manual link ([26149ad](https://github.com/Kuingsmile/piclist/commit/26149ad))
+* **custom:** remove some dev output ([a046b40](https://github.com/Kuingsmile/piclist/commit/a046b40))
+* **custom:** support avif picture preview ([630eb03](https://github.com/Kuingsmile/piclist/commit/630eb03))
+* **custom:** support secondary picbed upload ([8962a46](https://github.com/Kuingsmile/piclist/commit/8962a46)), closes [#226](https://github.com/Kuingsmile/piclist/issues/226)
+
+
+### :bug: Bug Fixes
+
+* **custom:** fix piclist picbed bugs ([893da24](https://github.com/Kuingsmile/piclist/commit/893da24)), closes [#236](https://github.com/Kuingsmile/piclist/issues/236)
+* **custom:** fix type error ([6bf6d6b](https://github.com/Kuingsmile/piclist/commit/6bf6d6b))
+
+
+### :pencil: Documentation
+
+* **custom:** prepare for new version ([0007d9a](https://github.com/Kuingsmile/piclist/commit/0007d9a))
+
+
+
+## :tada: 2.9.2 (2024-07-30)
+
+
+### :sparkles: Features
+
+* **custom:** add advanced picbed ([60d2a01](https://github.com/Kuingsmile/piclist/commit/60d2a01))
+* **custom:** optimize gallery page performance ([3cfa9f5](https://github.com/Kuingsmile/piclist/commit/3cfa9f5)), closes [#225](https://github.com/Kuingsmile/piclist/issues/225)
+
+
+### :pencil: Documentation
+
+* **custom:** prepare for 2.9.2 ([5ebe10c](https://github.com/Kuingsmile/piclist/commit/5ebe10c))
+* **custom:** update readme ([48d24f6](https://github.com/Kuingsmile/piclist/commit/48d24f6))
+
+
+
+## :tada: 2.9.1 (2024-07-07)
+
+
+### :sparkles: Features
+
+* **custom:** add alist support ([bead8a2](https://github.com/Kuingsmile/piclist/commit/bead8a2))
+* **custom:** add build in alist support and fix gallery bug ([875d034](https://github.com/Kuingsmile/piclist/commit/875d034)), closes [#218](https://github.com/Kuingsmile/piclist/issues/218)
+* **custom:** optimize upload progress ([0039399](https://github.com/Kuingsmile/piclist/commit/0039399))
+* **custom:** upgrade core ([6aa7311](https://github.com/Kuingsmile/piclist/commit/6aa7311))
+
+
+### :bug: Bug Fixes
+
+* **custom:** fix picbed config page css ([d7e0f56](https://github.com/Kuingsmile/piclist/commit/d7e0f56)), closes [#213](https://github.com/Kuingsmile/piclist/issues/213)
+* **custom:** fix rename window bug ([0b670a8](https://github.com/Kuingsmile/piclist/commit/0b670a8)), closes [#58](https://github.com/Kuingsmile/piclist/issues/58)
+* **custom:** fix s3 delete bug ([b30dc4d](https://github.com/Kuingsmile/piclist/commit/b30dc4d)), closes [#212](https://github.com/Kuingsmile/piclist/issues/212)
+
+
+### :pencil: Documentation
+
+* **custom:** add scoop-lemon as install method ([09bf847](https://github.com/Kuingsmile/piclist/commit/09bf847))
+* **custom:** fix docs typo ([dc70648](https://github.com/Kuingsmile/piclist/commit/dc70648))
+* **custom:** update 2.9.1 changelog ([2bdb79f](https://github.com/Kuingsmile/piclist/commit/2bdb79f))
+
+
+
+# :tada: 2.9.0 (2024-06-14)
+
+
+### :sparkles: Features
+
+* **custom:** add tray tooltip ([8a565c1](https://github.com/Kuingsmile/piclist/commit/8a565c1))
+* **custom:** optimize get config speed ([106290f](https://github.com/Kuingsmile/piclist/commit/106290f))
+* **custom:** refactor all main ipc event ([5ddc182](https://github.com/Kuingsmile/piclist/commit/5ddc182))
+* **custom:** smms delete for repeat file ([07e7a26](https://github.com/Kuingsmile/piclist/commit/07e7a26))
+* **custom:** support create bucket for s3 ([226f170](https://github.com/Kuingsmile/piclist/commit/226f170))
+* **custom:** update i18n force update ([e9c386d](https://github.com/Kuingsmile/piclist/commit/e9c386d))
+* **custom:** use new ssh2 and node-ssh ([2290e4e](https://github.com/Kuingsmile/piclist/commit/2290e4e))
+
+
+### :bug: Bug Fixes
+
+* **custom:** change manage file name ([d7028fc](https://github.com/Kuingsmile/piclist/commit/d7028fc))
+* **custom:** fix bug while using webp plugin ([30341d4](https://github.com/Kuingsmile/piclist/commit/30341d4)), closes [#205](https://github.com/Kuingsmile/piclist/issues/205)
+* **custom:** fix css error ([0c241bc](https://github.com/Kuingsmile/piclist/commit/0c241bc))
+* **custom:** fix url copy error for dirs ([f1a7a13](https://github.com/Kuingsmile/piclist/commit/f1a7a13))
+
+
+### :pencil: Documentation
+
+* **custom:** v2.9.0 changelog ([7226cc8](https://github.com/Kuingsmile/piclist/commit/7226cc8))
+
+
+
+## :tada: 2.8.6 (2024-05-26)
+
+
+### :sparkles: Features
+
+* **custom:** add ipc event handlers for mini window icon and set on top ([892a147](https://github.com/Kuingsmile/piclist/commit/892a147))
+* **custom:** improve speed of download config files ([e16737e](https://github.com/Kuingsmile/piclist/commit/e16737e))
+* **custom:** update manual source URL based on language configuration ([3587bc5](https://github.com/Kuingsmile/piclist/commit/3587bc5))
+* **custom:** update manual url for en language ([e6ee325](https://github.com/Kuingsmile/piclist/commit/e6ee325))
+* **custom:** write delete msg to log file ([16d6a19](https://github.com/Kuingsmile/piclist/commit/16d6a19))
+
+
+### :bug: Bug Fixes
+
+* **custom:** fix el-select option display problem ([4f95014](https://github.com/Kuingsmile/piclist/commit/4f95014))
+* **custom:** remove listener before unmount ([8b21e84](https://github.com/Kuingsmile/piclist/commit/8b21e84))
+
+
+### :pencil: Documentation
+
+* **custom:** prepare for 2.8.6 ([4887090](https://github.com/Kuingsmile/piclist/commit/4887090))
+
+
+### :zap: Performance Improvements
+
+* **custom:** improve the performance of clipboard watching ([4a0a882](https://github.com/Kuingsmile/piclist/commit/4a0a882))
+
+
+### :package: Chore
+
+* **custom:** update to macos-12 for action ([5eb3c9d](https://github.com/Kuingsmile/piclist/commit/5eb3c9d))
+
+
+
 ## :tada: 2.8.5 (2024-05-13)
 
 

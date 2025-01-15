@@ -1,8 +1,5 @@
 <template>
-  <el-icon
-    :color="color"
-    class="toolbox-status-icon"
-  >
+  <el-icon :color="color" class="toolbox-status-icon">
     <template v-if="props.status === IToolboxItemCheckStatus.SUCCESS">
       <SuccessFilled />
     </template>
@@ -14,10 +11,12 @@
     </template>
   </el-icon>
 </template>
+
 <script lang="ts" setup>
 import { CircleCloseFilled, Loading, SuccessFilled } from '@element-plus/icons-vue'
 import { computed } from 'vue'
-import { IToolboxItemCheckStatus } from '~/universal/types/enum'
+
+import { IToolboxItemCheckStatus } from '#/types/enum'
 
 interface IProps {
   status: IToolboxItemCheckStatus
@@ -35,14 +34,13 @@ const color = computed(() => {
       return '#909399'
   }
 })
-
 </script>
 <script lang="ts">
 export default {
   name: 'ToolboxStatusIcon'
 }
 </script>
-<style lang='stylus'>
+<style lang="stylus">
 .toolbox-status-icon {
   margin-left: 8px;
 }

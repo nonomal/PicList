@@ -34,7 +34,7 @@ if you want to use PicList-core, please go to [https://github.com/Kuingsmile/Pic
 ## Features
 
 - Retains all the features of PicGo and is compatible with the vast majority of existing PicGo plugins, including integrations with software like Typora and Obsidian.
-- Added multiple built-in image hosting platforms, such as WebDav, Lsky Pro, local image hosting, SFTP and Telegra.ph. The original built-in imgur image host now also supports account login for uploading.
+- Added multiple built-in image hosting platforms, such as WebDav, Lsky Pro, local image hosting, SFTP. The original built-in imgur image host now also supports account login for uploading.
 - Within the album, you can synchronize the deletion of cloud images. This is supported across all built-in image hosts and multiple plugins.
 - The album now offers advanced search and sorting features, as well as batch URL modification.
 - Built-in tools for adding watermarks, compressing images, scaling images, rotating images, and converting image formats are now available. Advanced renaming is also supported.
@@ -58,29 +58,19 @@ Please install my matching plugin [VS-PicList](https://marketplace.visualstudio.
 
 #### **Version 1.6.0-dev and above**
 
-**Typora 1.6.0-dev and above versions now support PicList natively**
+**Typora 1.6.0-dev and above versions now support PicList natively if you set language of Typora to Chinese.**
 
-Now you need to set the upload service PicList and PicGo (app) to the installation path of PicList at the same time, it has been fixed in latest dev version.
+If your Typora version is lower than 1.8.0, you need to set the upload service PicList and PicGo (app) to the installation path of PicList at the same time.
 
 [download link](https://typora.io/releases/all)
 
 #### **Version < 1.6.0-dev**
 
-Windows:
-
-Enter the Typora settings page, select the image, set the upload service to `PicGo(app)`, and then fill in the installation path of PicList in `PicGo path`, as shown below:
+For windows, Enter the Typora settings page, select the image, set the upload service to `PicGo(app)`, and then fill in the installation path of PicList in `PicGo path`, as shown below:
 
 ![image](https://user-images.githubusercontent.com/96409857/226522101-b3531b7b-534c-4149-b527-8738d4ebb041.png)
 
 Or, you can also use the `npm install piclist` command to install PicList-core, and then set the upload service to `PicGo-Core(command line)`.
-
-MacOS:
-
-Enter the Typora settings page, select the image, set the upload service to `Custom Command`, and then fill in `/Applications/PicList.app/Contents/MacOS/PicList upload` in `Command`, as shown below:
-
-![image](https://user-images.githubusercontent.com/96409857/226645570-4c6e06a5-5bd9-40c3-a21d-8446c66325e3.png)
-
-The verification of the upload option may have problems, you can ignore it, and use it directly.
 
 ### How to use in Obsidian
 
@@ -135,6 +125,7 @@ docker-compose up -d
 
 |          Platform          | Album cloud deletion | Cloud storage management |
 | :------------------------: | :------------------: | :----------------------: |
+|       Built-in AList       |          ✔️           |            ✔️             |
 |           SM.MS            |          ✔️           |            ✔️             |
 |           Github           |          ✔️           |            ✔️             |
 |           Imgur            |          ✔️           |            ✔️             |
@@ -148,8 +139,8 @@ docker-compose up -d
 |       Built-in SFTP        |          ✔️           |            ✔️             |
 |         Doge Cloud         |          ✔️           |            ✔️             |
 |    PicList(Lasso-Doll)     |          ✔️           |            ✔️             |
-|         Telegra.ph         |          ✔️           |            ×             |
 |          Lsky Pro          |          ✔️           |            ✔️             |
+|    Custom API platform     |          ×           |            ×             |
 
 |                                           Plugin                                           | Album cloud deletion |
 | :----------------------------------------------------------------------------------------: | :------------------: |
@@ -161,6 +152,15 @@ docker-compose up -d
 ## Download and install
 
 [https://github.com/Kuingsmile/PicList/releases/latest](https://github.com/Kuingsmile/PicList/releases/latest)
+
+### Scoop
+
+Thanks to [scoop-lemon](https://github.com/hoilc/scoop-lemon), you can use Scoop to install PicList, just execute the following command:
+
+```bash
+scoop bucket add lemon https://github.com/hoilc/scoop-lemon
+scoop install lemon/piclist
+```
 
 ### Homebrew
 
@@ -181,16 +181,6 @@ brew uninstall piclist
 If the macOS system installs PicList and displays "file is damaged" or installs and opens without response, please upgrade to PicList V1.4.1 or above.
 
 After V1.4.1, all mac installation packages have been signed by my developer certificate, will not be recognized by the macOS system as "malicious software", will not appear "file is damaged" prompt.
-
-### Mac App Store
-
-Due to the sandbox mechanism of Mac App Store, many functions cannot be used normally, so the installation method of Mac App Store is no longer supported.
-
-If you have purchased PicList through Mac App Store, please add my WeChat `pku_sq_ma`, I will refund you.
-
-Thank you again for your support for PicList.
-
-**Of course, if you don't want to pay, you can also download the free installation package through Github to install.**
 
 ## Application screenshot
 

@@ -1,12 +1,28 @@
-import fs from 'fs-extra'
-import db from '~/main/apis/core/datastore'
-import { clipboard, Notification, dialog } from 'electron'
-import { handleUrlEncode } from '~/universal/utils/common'
 import axios from 'axios'
+import { clipboard, Notification, dialog, Tray } from 'electron'
 import FormData from 'form-data'
-import logger from '../apis/core/picgo/logger'
-import { configPaths } from '~/universal/utils/configPaths'
-import { IShortUrlServer } from '~/universal/types/enum'
+import fs from 'fs-extra'
+
+import db from '@core/datastore'
+import logger from '@core/picgo/logger'
+
+import { IShortUrlServer } from '#/types/enum'
+import { handleUrlEncode } from '#/utils/common'
+import { configPaths } from '#/utils/configPaths'
+
+export let tray: Tray
+
+export const setTray = (t: Tray) => {
+  tray = t
+}
+
+export const getTray = () => tray
+
+export function setTrayToolTip(title: string): void {
+  if (tray) {
+    tray.setToolTip(title)
+  }
+}
 
 export const handleCopyUrl = (str: string): void => {
   if (db.get(configPaths.settings.autoCopy) !== false) {
@@ -18,13 +34,15 @@ export const handleCopyUrl = (str: string): void => {
  * show notification
  * @param options
  */
-export const showNotification = (options: IPrivateShowNotificationOption = {
-  title: '',
-  body: '',
-  clickToCopy: false,
-  copyContent: '',
-  clickFn: () => {}
-}) => {
+export const showNotification = (
+  options: IPrivateShowNotificationOption = {
+    title: '',
+    body: '',
+    clickToCopy: false,
+    copyContent: '',
+    clickFn: () => {}
+  }
+) => {
   const notification = new Notification({
     title: options.title,
     body: options.body
@@ -46,10 +64,8 @@ export const showNotification = (options: IPrivateShowNotificationOption = {
 }
 
 export const showMessageBox = (options: any) => {
-  return new Promise<IShowMessageBoxResult>(async (resolve) => {
-    dialog.showMessageBox(
-      options
-    ).then((res) => {
+  return new Promise<IShowMessageBoxResult>(async resolve => {
+    dialog.showMessageBox(options).then(res => {
       resolve({
         result: res.response,
         checkboxChecked: res.checkboxChecked
@@ -104,26 +120,30 @@ export const getClipboardFilePath = (): string => {
   }
 
   if (img.isEmpty() && platform === 'win32') {
-    const imgPath = clipboard.readBuffer('FileNameW')?.toString('ucs2')?.replace(RegExp(String.fromCharCode(0), 'g'), '')
+    const imgPath = clipboard
+      .readBuffer('FileNameW')
+      ?.toString('ucs2')
+      ?.replace(RegExp(String.fromCharCode(0), 'g'), '')
     return imgPath || ''
   }
 
   return ''
 }
 
-export const handleUrlEncodeWithSetting = (url: string) => db.get(configPaths.settings.encodeOutputURL) ? handleUrlEncode(url) : url
+export const handleUrlEncodeWithSetting = (url: string) =>
+  db.get(configPaths.settings.encodeOutputURL) ? handleUrlEncode(url) : url
 
 const c1nApi = 'https://c1n.cn/link/short'
 
 const generateC1NShortUrl = async (url: string) => {
-  const form = new FormData()
-  form.append('url', url)
   const c1nToken = db.get(configPaths.settings.c1nToken) || ''
   if (!c1nToken) {
     logger.warn('c1n token is not set')
     return url
   }
   try {
+    const form = new FormData()
+    form.append('url', url)
     const res = await axios.post(c1nApi, form, {
       headers: {
         token: c1nToken
@@ -141,43 +161,79 @@ const generateC1NShortUrl = async (url: string) => {
 const generateYOURLSShortUrl = async (url: string) => {
   let domain = db.get(configPaths.settings.yourlsDomain) || ''
   const signature = db.get(configPaths.settings.yourlsSignature) || ''
-  if (domain && signature) {
-    if (!/^https?:\/\//.test(domain)) {
-      domain = `http://${domain}`
-    }
-    try {
-      const res = await axios.get(`${domain}/yourls-api.php?signature=${signature}&action=shorturl&format=json&url=${url}`)
-      if (res.data?.shorturl) {
-        return res.data.shorturl
-      }
-    } catch (e: any) {
-      if (e.response?.data?.message?.indexOf('already exists in database') !== -1) {
-        return e.response.data.shorturl
-      }
-      logger.error(e)
-    }
-  } else {
+
+  if (!domain || !signature) {
     logger.warn('Yourls server or signature is not set')
+    return url
   }
+  if (!/^https?:\/\//.test(domain)) {
+    domain = `http://${domain}`
+  }
+  const params = new URLSearchParams({
+    signature,
+    action: 'shorturl',
+    format: 'json',
+    url
+  })
+  try {
+    const res = await axios.get(`${domain}/yourls-api.php?${params.toString()}`)
+    if (res.data?.shorturl) {
+      return res.data.shorturl
+    }
+  } catch (e: any) {
+    if (e.response?.data?.message?.includes('already exists in database')) {
+      return e.response.data.shorturl
+    }
+    logger.error(e)
+  }
+
   return url
 }
 
 const generateCFWORKERShortUrl = async (url: string) => {
   let cfWorkerHost = db.get(configPaths.settings.cfWorkerHost) || ''
   cfWorkerHost = cfWorkerHost.replace(/\/$/, '')
-  if (cfWorkerHost) {
-    try {
-      const res = await axios.post(cfWorkerHost, {
-        url
-      })
-      if (res.data?.status === 200 && res.data?.key?.startsWith('/')) {
-        return `${cfWorkerHost}${res.data.key}`
-      }
-    } catch (e: any) {
-      logger.error(e)
-    }
-  } else {
+  if (!cfWorkerHost) {
     logger.warn('CF Worker host is not set')
+    return url
+  }
+
+  try {
+    const res = await axios.post(cfWorkerHost, { url })
+    if (res.data?.status === 200 && res.data?.key?.startsWith('/')) {
+      return `${cfWorkerHost}${res.data.key}`
+    }
+  } catch (e: any) {
+    logger.error(e)
+  }
+
+  return url
+}
+
+const generateSinkShortUrl = async (url: string) => {
+  let sinkDomain = db.get(configPaths.settings.sinkDomain) || ''
+  const sinkToken = db.get(configPaths.settings.sinkToken) || ''
+  if (!sinkDomain || !sinkToken) {
+    logger.warn('Sink domain or token is not set')
+    return url
+  }
+  if (!/^https?:\/\//.test(sinkDomain)) {
+    sinkDomain = `http://${sinkDomain}`
+  }
+  if (sinkDomain.endsWith('/')) {
+    sinkDomain = sinkDomain.slice(0, -1)
+  }
+  try {
+    const res = await axios.post(
+      `${sinkDomain}/api/link/create`,
+      { url },
+      { headers: { Authorization: `Bearer ${sinkToken}` } }
+    )
+    if (res.data?.link?.slug) {
+      return `${sinkDomain}/${res.data.link.slug}`
+    }
+  } catch (e: any) {
+    logger.error(e)
   }
   return url
 }
@@ -191,6 +247,8 @@ export const generateShortUrl = async (url: string) => {
       return generateYOURLSShortUrl(url)
     case IShortUrlServer.CFWORKER:
       return generateCFWORKERShortUrl(url)
+    case IShortUrlServer.SINK:
+      return generateSinkShortUrl(url)
     default:
       return url
   }

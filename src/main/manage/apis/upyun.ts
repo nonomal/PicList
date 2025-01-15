@@ -1,40 +1,27 @@
+import axios from 'axios'
+import { ipcMain, IpcMainEvent } from 'electron'
+import FormData from 'form-data'
+import fs from 'fs-extra'
+import path from 'path'
 import Upyun from 'upyun'
 
-// 加密函数、获取文件 MIME 类型、新的下载器、got 上传函数、并发异步任务池、错误格式化函数
-import { md5, hmacSha1Base64, getFileMimeType, NewDownloader, gotUpload, ConcurrencyPromisePool, formatError } from '../utils/common'
-
-// 是否为图片的判断函数
-import { isImage } from '~/renderer/manage/utils/common'
-
-// 窗口管理器
 import windowManager from 'apis/app/window/windowManager'
 
-// 枚举类型声明
-import { IWindowList } from '#/types/enum'
+import {
+  md5,
+  hmacSha1Base64,
+  getFileMimeType,
+  NewDownloader,
+  gotUpload,
+  ConcurrencyPromisePool,
+  formatError
+} from '~/manage/utils/common'
+import { ManageLogger } from '~/manage/utils/logger'
+import UpDownTaskQueue from '~/manage/datastore/upDownTaskQueue'
 
-// Electron 相关
-import { ipcMain, IpcMainEvent } from 'electron'
-
-// Axios
-import axios from 'axios'
-
-// 表单数据库
-import FormData from 'form-data'
-
-// 文件系统库
-import fs from 'fs-extra'
-
-// 路径处理库
-import path from 'path'
-
-// 上传下载任务队列
-import UpDownTaskQueue, { commonTaskStatus } from '../datastore/upDownTaskQueue'
-
-// 日志记录器
-import { ManageLogger } from '../utils/logger'
-
-// 取消下载任务的加载文件列表、刷新下载文件传输列表
-import { cancelDownloadLoadingFileList, refreshDownloadFileTransferList } from '@/manage/utils/static'
+import { commonTaskStatus, IWindowList } from '#/types/enum'
+import { isImage } from '#/utils/common'
+import { cancelDownloadLoadingFileList, refreshDownloadFileTransferList } from '#/utils/static'
 
 class UpyunApi {
   ser: Upyun.Service
@@ -47,7 +34,14 @@ class UpyunApi {
   stopMarker = 'g2gCZAAEbmV4dGQAA2VvZg'
   logger: ManageLogger
 
-  constructor (bucket: string, operator: string, password: string, logger: ManageLogger, antiLeechToken?: string, expireTime?: number) {
+  constructor(
+    bucket: string,
+    operator: string,
+    password: string,
+    logger: ManageLogger,
+    antiLeechToken?: string,
+    expireTime?: number
+  ) {
     this.ser = new Upyun.Service(bucket, operator, password)
     this.cli = new Upyun.Client(this.ser)
     this.bucket = bucket
@@ -58,7 +52,7 @@ class UpyunApi {
     this.expireTime = expireTime || 24 * 60 * 60
   }
 
-  getAntiLeechParam (key: string): string {
+  getAntiLeechParam(key: string): string {
     const uri = `/${key}`.replace(/%2F/g, '/').replace(/^\/+/g, '/')
     const now = Math.round(new Date().getTime() / 1000)
     const expire = this.expireTime ? now + parseInt(this.expireTime.toString(), 10) : now + 1800
@@ -67,11 +61,16 @@ class UpyunApi {
     return `_upt=${upt}`
   }
 
-  formatFolder (item: any, slicedPrefix: string) {
+  formatFolder(item: any, slicedPrefix: string, urlPrefix: string) {
     const key = `${slicedPrefix}${item.name}/`
+    let url = `${urlPrefix}/${key}`
+    if (this.antiLeechToken) {
+      url = `${url}?${this.getAntiLeechParam(key)}`
+    }
     return {
       ...item,
       key,
+      url,
       fileSize: 0,
       formatedTime: '',
       fileName: item.name,
@@ -83,7 +82,7 @@ class UpyunApi {
     }
   }
 
-  formatFile (item: any, slicedPrefix: string, urlPrefix: string) {
+  formatFile(item: any, slicedPrefix: string, urlPrefix: string) {
     const key = `${slicedPrefix}${item.name}`
     let url = `${urlPrefix}/${key}`
     if (this.antiLeechToken) {
@@ -103,13 +102,7 @@ class UpyunApi {
     }
   }
 
-  authorization (
-    method: string,
-    uri: string,
-    contentMd5: string,
-    operator: string,
-    password: string
-  ) {
+  authorization(method: string, uri: string, contentMd5: string, operator: string, password: string) {
     return `UPYUN ${operator}:${hmacSha1Base64(
       md5(password, 'hex'),
       `${method.toUpperCase()}&${encodeURI(uri)}&${new Date().toUTCString()}${contentMd5 ? `&${contentMd5}` : ''}`
@@ -119,17 +112,17 @@ class UpyunApi {
   /**
    * 获取空间列表
    */
-  async getBucketList (): Promise<any> {
+  async getBucketList(): Promise<any> {
     return this.bucket
   }
 
-  async getBucketListRecursively (configMap: IStringKeyMap): Promise<any> {
+  async getBucketListRecursively(configMap: IStringKeyMap): Promise<any> {
     const window = windowManager.get(IWindowList.SETTING_WINDOW)!
     const { bucketName: bucket, prefix, cancelToken } = configMap
     const slicedPrefix = prefix.slice(1)
     const urlPrefix = configMap.customUrl || `http://${bucket}.test.upcdn.net`
     const cancelTask = [false]
-    ipcMain.on(cancelDownloadLoadingFileList, (_evt: IpcMainEvent, token: string) => {
+    ipcMain.on(cancelDownloadLoadingFileList, (_: IpcMainEvent, token: string) => {
       if (token === cancelToken) {
         cancelTask[0] = true
         ipcMain.removeAllListeners(cancelDownloadLoadingFileList)
@@ -175,14 +168,14 @@ class UpyunApi {
     ipcMain.removeAllListeners(cancelDownloadLoadingFileList)
   }
 
-  async getBucketListBackstage (configMap: IStringKeyMap): Promise<any> {
+  async getBucketListBackstage(configMap: IStringKeyMap): Promise<any> {
     const window = windowManager.get(IWindowList.SETTING_WINDOW)!
     const { bucketName: bucket, prefix, cancelToken } = configMap
     const slicedPrefix = prefix.slice(1)
     const urlPrefix = configMap.customUrl || `http://${bucket}.test.upcdn.net`
     let marker = ''
     const cancelTask = [false]
-    ipcMain.on('cancelLoadingFileList', (_evt: IpcMainEvent, token: string) => {
+    ipcMain.on('cancelLoadingFileList', (_: IpcMainEvent, token: string) => {
       if (token === cancelToken) {
         cancelTask[0] = true
         ipcMain.removeAllListeners('cancelLoadingFileList')
@@ -202,7 +195,7 @@ class UpyunApi {
       if (res) {
         res.files?.forEach((item: any) => {
           item.type === 'N' && result.fullList.push(this.formatFile(item, slicedPrefix, urlPrefix))
-          item.type === 'F' && result.fullList.push(this.formatFolder(item, slicedPrefix))
+          item.type === 'F' && result.fullList.push(this.formatFolder(item, slicedPrefix, urlPrefix))
         })
         window.webContents.send('refreshFileTransferList', result)
       } else {
@@ -233,8 +226,8 @@ class UpyunApi {
    *  itemsPerPage: number,
    *  customUrl: string
    * }
-  */
-  async getBucketFileList (configMap: IStringKeyMap): Promise<any> {
+   */
+  async getBucketFileList(configMap: IStringKeyMap): Promise<any> {
     const { bucketName: bucket, prefix, marker, itemsPerPage } = configMap
     const slicedPrefix = prefix.slice(1)
     const urlPrefix = configMap.customUrl || `http://${bucket}.test.upcdn.net`
@@ -252,7 +245,7 @@ class UpyunApi {
     if (res) {
       res.files?.forEach((item: any) => {
         item.type === 'N' && result.fullList.push(this.formatFile(item, slicedPrefix, urlPrefix))
-        item.type === 'F' && result.fullList.push(this.formatFolder(item, slicedPrefix))
+        item.type === 'F' && result.fullList.push(this.formatFolder(item, slicedPrefix, urlPrefix))
       })
       result.isTruncated = res.next !== this.stopMarker
       result.nextMarker = res.next
@@ -262,16 +255,16 @@ class UpyunApi {
   }
 
   /**
-     * 重命名文件
-     * @param configMap
-     * configMap = {
-     * bucketName: string,
-     * region: string,
-     * oldKey: string,
-     * newKey: string
-     * }
-    */
-  async renameBucketFile (configMap: IStringKeyMap): Promise<boolean> {
+   * 重命名文件
+   * @param configMap
+   * configMap = {
+   * bucketName: string,
+   * region: string,
+   * oldKey: string,
+   * newKey: string
+   * }
+   */
+  async renameBucketFile(configMap: IStringKeyMap): Promise<boolean> {
     const oldKey = configMap.oldKey
     let newKey = configMap.newKey
     const method = 'PUT'
@@ -296,25 +289,25 @@ class UpyunApi {
   }
 
   /**
-  * 删除文件
-  * @param configMap
-  * configMap = {
-  * bucketName: string,
-  * region: string,
-  * key: string
-  * }
-  */
-  async deleteBucketFile (configMap: IStringKeyMap): Promise<boolean> {
+   * 删除文件
+   * @param configMap
+   * configMap = {
+   * bucketName: string,
+   * region: string,
+   * key: string
+   * }
+   */
+  async deleteBucketFile(configMap: IStringKeyMap): Promise<boolean> {
     const { key } = configMap
     const res = await this.cli.deleteFile(key)
     return res
   }
 
   /**
-  * delete bucket folder
-  * @param configMap
-  */
-  async deleteBucketFolder (configMap: IStringKeyMap): Promise<boolean> {
+   * delete bucket folder
+   * @param configMap
+   */
+  async deleteBucketFolder(configMap: IStringKeyMap): Promise<boolean> {
     const { key } = configMap
     let marker = ''
     let isTruncated
@@ -329,14 +322,16 @@ class UpyunApi {
       })
       if (res) {
         res.files.forEach((item: any) => {
-          item.type === 'N' && allFileList.Contents.push({
-            ...item,
-            key: `${key}${item.name}`
-          })
-          item.type === 'F' && allFileList.CommonPrefixes.push({
-            ...item,
-            key: `${key}${item.name}/`
-          })
+          item.type === 'N' &&
+            allFileList.Contents.push({
+              ...item,
+              key: `${key}${item.name}`
+            })
+          item.type === 'F' &&
+            allFileList.CommonPrefixes.push({
+              ...item,
+              key: `${key}${item.name}/`
+            })
         })
         marker = res.next
         isTruncated = res.next !== this.stopMarker
@@ -376,7 +371,7 @@ class UpyunApi {
    * axiso:onUploadProgress not work in nodejs , use got instead
    * @param configMap
    */
-  async uploadBucketFile (configMap: IStringKeyMap): Promise<boolean> {
+  async uploadBucketFile(configMap: IStringKeyMap): Promise<boolean> {
     const { fileArray } = configMap
     const instance = UpDownTaskQueue.getInstance()
     fileArray.forEach((item: any) => {
@@ -432,7 +427,7 @@ class UpyunApi {
    * 新建文件夹
    * @param configMap
    */
-  async createBucketFolder (configMap: IStringKeyMap): Promise<boolean> {
+  async createBucketFolder(configMap: IStringKeyMap): Promise<boolean> {
     const { key } = configMap
     const res = await this.cli.makeDir(`/${key}`)
     return res
@@ -442,7 +437,7 @@ class UpyunApi {
    * 下载文件
    * @param configMap
    */
-  async downloadBucketFile (configMap: IStringKeyMap): Promise<boolean> {
+  async downloadBucketFile(configMap: IStringKeyMap): Promise<boolean> {
     const { downloadPath, fileArray, maxDownloadFileCount } = configMap
     const instance = UpDownTaskQueue.getInstance()
     const promises = [] as any
@@ -461,19 +456,21 @@ class UpyunApi {
         targetFilePath: savedFilePath
       })
       const preSignedUrl = `${customUrl}/${key}`
-      promises.push(() => new Promise((resolve, reject) => {
-        NewDownloader(instance, preSignedUrl, id, savedFilePath, this.logger)
-          .then((res: boolean) => {
-            if (res) {
-              resolve(res)
-            } else {
-              reject(res)
-            }
+      promises.push(
+        () =>
+          new Promise((resolve, reject) => {
+            NewDownloader(instance, preSignedUrl, id, savedFilePath, this.logger).then((res: boolean) => {
+              if (res) {
+                resolve(res)
+              } else {
+                reject(res)
+              }
+            })
           })
-      }))
+      )
     }
     const pool = new ConcurrencyPromisePool(maxDownloadFileCount)
-    pool.all(promises).catch((error) => {
+    pool.all(promises).catch(error => {
       this.logger.error(formatError(error, { class: 'UpyunApi', method: 'downloadBucketFile' }))
     })
     return true

@@ -2,6 +2,7 @@ LANG_DISPLAY_LABEL: 'English'
 ABOUT: About
 OPEN_MAIN_WINDOW: Open Main Window
 OPEN_MINI_WINDOW: Open Mini Window
+HIDE_MINI_WINDOW: Hide Mini Window
 CHOOSE_DEFAULT_PICBED: Choose Default Picbed
 OPEN_UPDATE_HELPER: Open Update Helper
 RELOAD_APP: Reload App
@@ -24,6 +25,7 @@ NO_MORE_NOTICE: No More Notice
 SHOW_DEVTOOLS: Show Devtools
 FEEDBACK: Feedback
 CURRENT_PICBED: Current Picbed
+CURRENT_SECOND_PICBED: Current Second Picbed
 START_WATCH_CLIPBOARD: Start Watch Clipboard
 STOP_WATCH_CLIPBOARD: Stop Watch Clipboard
 OPEN_TOOLBOX: Open Toolbox
@@ -54,7 +56,7 @@ TOOLBOX_CHECK_CLIPBOARD_FILE_PATH_ERROR_TIPS: "Please create the folder yourself
 MANUAL_PAGE_OPEN_TIP: Please select the way to open the manual
 MANUAL_PAGE_OPEN_TIP_TITLE: Tips
 MANUAL_PAGE_OPEN_BY_BROWSER: Browser
-MANUAL_PAGE_OPEN_BY_BUILD_IN: Built-in
+MANUAL_PAGE_OPEN_BY_BUILD_IN: Built-in Window
 MANUAL_PAGE_OPEN_SETTING_TIP: Select the way to open the manual
 
 # ---renderer i18n begin---
@@ -119,7 +121,7 @@ UPLOAD_PAGE_IMAGE_PROCESS_WMCOLOR: Watermark Color, Please select from the color
 UPLOAD_PAGE_IMAGE_PROCESS_WMPATH: Watermark Image Path (leave blank to use default image)
 UPLOAD_PAGE_IMAGE_PROCESS_WMPOSITION: Watermark Position
 UPLOAD_PAGE_IMAGE_PROCESS_ISREMOVEEXIF: Remove EXIF Info
-UPLOAD_PAGE_IMAGE_PROCESS_QUALITY: Compression Quality
+UPLOAD_PAGE_IMAGE_PROCESS_QUALITY: Compression Quality(1-100)
 UPLOAD_PAGE_IMAGE_PROCESS_ISCONVERT: Convert Format
 UPLOAD_PAGE_IMAGE_PROCESS_CONVERTFORMAT: Destination Format
 UPLOAD_PAGE_IMAGE_PROCESS_CONVERTFORMAT_SPECIFIC: 'Specific Format, Please enter in json format, e.g. {"png": "jpg"}'
@@ -182,6 +184,8 @@ SETTINGS_TIMESTAMP_RENAME: Timestamp Rename
 SETTINGS_ADVANCED_RENAME: Advanced Rename
 SETTINGS_ADVANCED_RENAME_ENABLE: Enable Advanced Rename
 SETTINGS_ADVANCED_RENAME_FORMAT: Advanced Rename Format
+SETTINGS_ENABLE_SECOND_PICBED: Enable Second Picbed
+SETTINGS_SET_SECOND_PICBED: Set Second Picbed
 SETTINGS_OPEN_UPLOAD_TIPS: Open Upload Tips
 SETTINGS_OPEN_UPLOAD_RESULT_TIPS: Open Upload Result Tips
 SETTINGS_MINI_WINDOW_ON_TOP: Mini Window On Top
@@ -196,7 +200,7 @@ SETTINGS_PLUGIN_INSTALL_MIRROR: Mirror for Plugin Install
 SETTINGS_CURRENT_VERSION: Current Version
 SETTINGS_NEWEST_VERSION: Newest Version
 SETTINGS_GETING: Getting...
-SETTINGS_TIPS_HAS_NEW_VERSION: PicList has a new version, please click confirm to open download page
+SETTINGS_TIPS_HAS_NEW_VERSION: PicList has a new version, please click confirm to restart
 SETTINGS_LOG_FILE_PATH: Log File Path
 SETTINGS_CONFIG_FILE_PATH: Config File Path
 SETTINGS_LOG_FILE: Log File
@@ -259,6 +263,8 @@ SETTINGS_SHORT_URL_C1N_TOKEN: C1N Token
 SETTINGS_SHORT_URL_YOURLS_DOMAIN: YOURLS domain
 SETTINGS_SHORT_URL_YOURLS_SIGNATURE: YOURLS signature
 SETTINGS_SHORT_URL_CF_WORKER_HOST: Cloudflare Worker Host
+SETTINGS_SHORT_SINK_DOMAIN: sink domain
+SETTINGS_SHORT_SINK_TOKEN: sink token
 SETTINGS_DELETE_LOCAL_FILE_AFTER_UPLOAD: Delete local file after upload
 SETTINGS_SYNC_CONFIG: Settings Sync Configuration
 SETTINGS_SYNC_CONFIG_TITLE: Sync Settings
@@ -311,7 +317,7 @@ SETTINGS_SYNC_MANAGE_CONFIG: Manage configuration
 SETTINGS_AUTO_IMPORT: Auto import config in manage page
 SETTINGS_AUTO_IMPORT_SELECT_PICBED: Select picbed
 SETTINGS_TAB_SYSTEM: System
-SETTINGS_TAB_SYNC_CONFIG: Sync and Configuration
+SETTINGS_TAB_SYNC_CONFIG: Configuration
 SETTINGS_TAB_UPLOAD: Upload
 SETTINGS_TAB_ADVANCED: Advanced
 SETTINGS_TAB_UPDATE: Update
@@ -378,37 +384,38 @@ TIPS_GET_PLUGIN_LIST_FAILED: Get plugin list failed
 # manageSetting
 
 MANAGE_SETTING_TITLE: Manage Setting
-MANAGE_SETTING_AUTO_FRESH_TITLE: Auto refresh file list when entering new directory
-MANAGE_SETTING_AUTO_FRESH_TIPS: Only applies to non-paginated mode, data is cached to indexdb to speed up loading speed
+MANAGE_SETTING_ISAUTOREFRESH_TITLE: Auto refresh file list when entering new directory
+MANAGE_SETTING_ISAUTOREFRESH_TIPS: Only applies to non-paginated mode, data is cached to indexdb to speed up loading speed
 MANAGE_SETTING_CLEAR_CACHE_TITLE: 'Clear file list cache database, currently in use:'
 MANAGE_SETTING_CLEAR_CACHE_FREE_TITLE: 'Available:'
 MANAGE_SETTING_CLEAR_CACHE_TIPS: After clearing, the file list will be reloaded when entering a new directory next time
 MANAGE_SETTING_CLEAR_CACHE_PROMPT: Are you sure you want to clear the file list cache database?
 MANAGE_SETTING_CLEAR_CACHE_BUTTON: Clear
-MANAGE_SETTING_SHOW_THUMBNAIL_TITLE: Display the original image instead of format icon (requires public access permissions)
-MANAGE_SETTING_SHOW_FILE_LIST_TYPE_TITLE: Default display mode for the file list
-MANAGE_SETTING_SHOW_FILE_LIST_TYPE_LIST: List
-MANAGE_SETTING_SHOW_FILE_LIST_TYPE_CARD: Card
-MANAGE_SETTING_FORCE_CUSTOM_URL_HTTPS_TITLE: Force custom URL to use HTTPS
-MANAGE_SETTING_FORCE_CUSTOM_URL_HTTPS_TIPS: After enabling, all operations will automatically add the https prefix to custom domains
-MANAGE_SETTING_KEEP_FOLDER_STRUCTURE_UPLOAD_TITLE: Preserve directory structure when uploading
-MANAGE_SETTING_KEEP_FOLDER_STRUCTURE_UPLOAD_TIPS: After disabling, all files will be expanded to the specified directory
-MANAGE_SETTING_KEEP_FOLDER_STRUCTURE_DOWNLOAD_TITLE_A: Download
-MANAGE_SETTING_KEEP_FOLDER_STRUCTURE_DOWNLOAD_TITLE_B: ' File '
-MANAGE_SETTING_KEEP_FOLDER_STRUCTURE_DOWNLOAD_TITLE_C: will preserve the directory structure
-MANAGE_SETTING_KEEP_FOLDER_STRUCTURE_DOWNLOAD_TITLE_D: ' Folder '
-MANAGE_SETTING_KEEP_FOLDER_STRUCTURE_DOWNLOAD_FILE_TIPS: After enabling, the original directory structure will be preserved
+MANAGE_SETTING_ISSHOWTHUMBNAIL_TITLE: Display the original image instead of format icon (requires public access permissions)
+MANAGE_SETTING_ISUSEPRESIGNEDURL_TITLE: Use presigned URL for image display
+MANAGE_SETTING_ISSHOWLIST_TITLE: Default display mode for the file list
+MANAGE_SETTING_ISSHOWLIST_ON: List
+MANAGE_SETTING_ISSHOWLIST_OFF: Card
+MANAGE_SETTING_ISFORCECUSTOMURLHTTPS_TITLE: Force custom URL to use HTTPS
+MANAGE_SETTING_ISFORCECUSTOMURLHTTPS_TIPS: After enabling, all operations will automatically add the https prefix to custom domains
+MANAGE_SETTING_ISUPLOADKEEPDIRSTRUCTURE_TITLE: Preserve directory structure when uploading
+MANAGE_SETTING_ISUPLOADKEEPDIRSTRUCTURE_TIPS: After disabling, all files will be expanded to the specified directory
+MANAGE_SETTING_ISDOWNLOADFILEKEEPDIRSTRUCTURE_TITLE_A: Download
+MANAGE_SETTING_ISDOWNLOADFILEKEEPDIRSTRUCTURE_TITLE_B: ' File '
+MANAGE_SETTING_ISDOWNLOADFILEKEEPDIRSTRUCTURE_TITLE_C: will preserve the directory structure
+MANAGE_SETTING_ISDOWNLOADFOLDERKEEPDIRSTRUCTURE_TITLE_D: ' Folder '
+MANAGE_SETTING_ISDOWNLOADFILEKEEPDIRSTRUCTURE_TIPS: After enabling, the original directory structure will be preserved
 MANAGE_SETTING_MAX_DOWNLOAD_FILE_SIZE_TITLE: Maximum number of files to download simultaneously (1-9999)
 MANAGE_SETTING_MAX_DOWNLOAD_FILE_SIZE_TIPS: Not work on Tencent 
 MANAGE_SETTING_MAX_DOWNLOAD_FILE_SIZE_INPUT_TIPS: Please enter the maximum number of files to download simultaneously
-MANAGE_SETTING_SEARCH_IGNORE_CASE_TITLE: Should file search be case-insensitive
-MANAGE_SETTING_SEARCH_IGNORE_CASE_TIPS: After enabling, the search will be case-insensitive
-MANAGE_SETTING_TIMESTAMP_RENAME_TITLE: Rename uploaded files with timestamp - (highest priority)
-MANAGE_SETTING_TIMESTAMP_RENAME_TIPS: After enabling, the uploaded file will be renamed with the timestamp
-MANAGE_SETTING_RANDOM_STRING_RENAME_TITLE: Rename uploaded files with random strings - (medium priority)
-MANAGE_SETTING_RANDOM_STRING_RENAME_TIPS: Random string length is 20
-MANAGE_SETTING_CUSTOM_RENAME_TITLE: Rename uploaded files with custom names - (lowest priority)
-MANAGE_SETTING_CUSTOM_RENAME_TIPS: After enabling, the uploaded file will be renamed with the custom pattern
+MANAGE_SETTING_ISIGNORECASE_TITLE: Should file search be case-insensitive
+MANAGE_SETTING_ISIGNORECASE_TIPS: After enabling, the search will be case-insensitive
+MANAGE_SETTING_TIMESTAMPRENAME_TITLE: Rename uploaded files with timestamp - (highest priority)
+MANAGE_SETTING_TIMESTAMPRENAME_TIPS: After enabling, the uploaded file will be renamed with the timestamp
+MANAGE_SETTING_RANDOMSTRINGRENAME_TITLE: Rename uploaded files with random strings - (medium priority)
+MANAGE_SETTING_RANDOMSTRINGRENAME_TIPS: Random string length is 20
+MANAGE_SETTING_CUSTOMRENAME_TITLE: Rename uploaded files with custom names - (lowest priority)
+MANAGE_SETTING_CUSTOMRENAME_TIPS: After enabling, the uploaded file will be renamed with the custom pattern
 MANAGE_SETTING_CUSTOM_PATTERN_TITLE: Custom rename format, placeholders can be freely combined, please refer to the table below
 MANAGE_SETTING_CUSTOM_PATTERN_TIPS: Please enter the custom rename format
 MANAGE_SETTING_CUSTOM_PATTERN_TABLE_TITLE: Placeholder
@@ -430,8 +437,8 @@ MANAGE_SETTING_CHOOSE_DOWNLOAD_FOLDER_BUTTON: Choose folder
 MANAGE_SETTING_COPY_MESSAGE: Copied
 MANAGE_SETTING_CLEAR_CACHE_SUCCESS: Cleared successfully
 MANAGE_SETTING_CLEAR_CACHE_FAILED: Clear failed
-MANAGE_SETTING_ENCODE_URL_WHEN_COPY: Encode URL when copy
-MANAGE_SETTING_ENCODE_URL_WHEN_COPY_TIPS: After enabling, the URL will be encoded when copying
+MANAGE_SETTING_ISENCODEURL_TITLE: Encode URL when copy
+MANAGE_SETTING_ISENCODEURL_TIPS: After enabling, the URL will be encoded when copying
 # Empty
 MANAGE_NO_DATA: No data
 
@@ -758,13 +765,18 @@ MANAGE_BUCKET_DELETE_BTN: Delete
 MANAGE_BUCKET_SORT_TITLE: Sort
 MANAGE_BUCKET_SORT_NAME: Name
 MANAGE_BUCKET_SORT_SIZE: Size
-MANAGE_BUCKET_SORT_TYPE: Type
+MANAGE_BUCKET_SORT_EXT: Type
 MANAGE_BUCKET_SORT_TIME: Time
-MANAGE_BUCKET_SORT_SELECTED: Selected status
-MANAGE_BUCKET_INIT: Init
+MANAGE_BUCKET_SORT_CHECK: Selected status
+MANAGE_BUCKET_SORT_INIT: Init
 MANAGE_BUCKET_URL_UPLOAD_DIALOG_TITLE: Please enter URL(s), support multiple URLs separated by line breaks
 MANAGE_BUCKET_URL_UPLOAD_DIALOG_CONFIRM: Confirm
 MANAGE_BUCKET_URL_UPLOAD_DIALOG_CANCEL: Cancel
+MANAGE_BUCKET_URL_FORMAT_MARKDOWN: Markdown
+MANAGE_BUCKET_URL_FORMAT_MARKDOWN_WITH_LINK: Markdown-link
+MANAGE_BUCKET_URL_FORMAT_URL: Url
+MANAGE_BUCKET_URL_FORMAT_HTML: Html
+MANAGE_BUCKET_URL_FORMAT_BBCODE: BBCode
 MANAGE_BUCKET_URL_FORMAT_CUSTOM: Custom
 MANAGE_BUCKET_URL_FORMAT_PRESIGN: Presigned link
 MANAGE_BUCKET_FILE_INFO_TITLE: File information
@@ -944,19 +956,16 @@ MANAGE_NEW_BUCKET_QINIU_BUCKETNAME_RULE_MSG_B: Bucket name length cannot exceed 
 MANAGE_NEW_BUCKET_QINIU_BUCKETNAME_RULE_MSG_C: Bucket names can only contain lowercase letters, numbers, and hyphens, and cannot start or end with a hyphen.
 MANAGE_NEW_BUCKET_QINIU_REGION: Region
 MANAGE_NEW_BUCKET_QINIU_ACL_DESC: Public Access
-MANAGE_NEW_BUCKET_UPYUN_NAME: Upyun
-MANAGE_NEW_BUCKET_UPYUN_BUCKETNAME_DESC: Bucket Name
-MANAGE_NEW_BUCKET_UPYUN_BUCKETNAME_PLACEHOLDER: Please enter bucket name
-MANAGE_NEW_BUCKET_UPYUN_BUCKETNAME_RULE_MSG_A: Bucket name cannot be empty
-MANAGE_NEW_BUCKET_UPYUN_BUCKETNAME_RULE_MSG_B: Bucket name length should be between 5-20 characters
-MANAGE_NEW_BUCKET_UPYUN_BUCKETNAME_RULE_MSG_C: Bucket names can only contain lowercase letters, numbers, and hyphens, and cannot start or end with a hyphen.
-MANAGE_NEW_BUCKET_UPYUN_OPERATORNAME_DESC: Operator Name
-MANAGE_NEW_BUCKET_UPYUN_OPERATORNAME_PLACEHOLDER: Please enter operator name
-MANAGE_NEW_BUCKET_UPYUN_OPERATORNAME_RULE_MSG_A: Operator name cannot be empty
-MANAGE_NEW_BUCKET_UPYUN_PASSWORD_DESC: Password
-MANAGE_NEW_BUCKET_UPYUN_PASSWORD_PLACEHOLDER: Please enter password
-MANAGE_NEW_BUCKET_UPYUN_PASSWORD_RULE_MSG_A: Password cannot be empty
-
+MANAGE_NEW_BUCKET_S3PLIST_NAME: S3-Compatible
+MANAGE_NEW_BUCKET_S3PLIST_BUCKETNAME_DESC: Bucket Name
+MANAGE_NEW_BUCKET_S3PLIST_BUCKETNAME_PLACEHOLDER: Please enter the Bucket name
+MANAGE_NEW_BUCKET_S3PLIST_BUCKETNAME_RULE_MSG_A: Bucket name can't be empty
+MANAGE_NEW_BUCKET_S3PLIST_REGION: Region
+MANAGE_NEW_BUCKET_S3PLIST_ACL_DESC: Access Control
+MANAGE_NEW_BUCKET_S3PLIST_ACL_PUBLIC_RW: Public Read and Write
+MANAGE_NEW_BUCKET_S3PLIST_ACL_PUBLIC_R: Public Read
+MANAGE_NEW_BUCKET_S3PLIST_ACL_PRIVATE: Private
+MANAGE_NEW_BUCKET_S3PLIST_ACL_AUTHENTICATED_READ: Authenticated Read
 # ---renderer i18n end---
 
 # plugins
